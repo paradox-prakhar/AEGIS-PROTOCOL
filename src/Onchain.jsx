@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { formatEther, isAddress } from 'ethers';
 import {
-  activeRegistry, addressUrl, configuredRegistry, connectWallet, defaultReviewer, deployRegistry, describeError,
-  evidenceHash, expectedDeployer, fetchReports, registryInfo, rememberRegistry, reportIdFromReceipt, sendRegistryTx, txUrl,
+  ISSUER_ACTIONS, accountRoles, activeRegistry, addressUrl, configuredRegistry, connectWallet, defaultReviewer, deployRegistry, describeError,
+  evidenceHash, expectedDeployer, fetchReports, issuerNotes, registryInfo, rememberRegistry, reportIdFromReceipt, sendRegistryTx, txUrl,
 } from './chain';
 import { CATEGORIES, MAX_DESCRIPTION, arkivEntityUrl, arkivTxUrl, recoveryPackage } from './arkiv-meta';
 const arkiv = () => import('./arkiv');
@@ -29,6 +29,8 @@ export default function Onchain() {
   const [dual, setDual] = useState(null);
   const busyRef = useRef(false);
   const [mine, setMine] = useState(null);
+  const [roles, setRoles] = useState({ isIssuer: false, credits: 0n });
+  const [notes, setNotes] = useState(null);
 
   const validRegistry = isAddress(address);
   const isReviewer = same(account, info?.reviewer);
@@ -71,12 +73,14 @@ export default function Onchain() {
     const a = await signer.getAddress();
     setAccount(a);
     setBalance(formatEther(await signer.provider.getBalance(a)));
+    if (v2) setRoles(await accountRoles(address, a));
     setMessage('Connected to Arc Testnet.');
   }
 
-  async function write(method, args, done = 'Transaction confirmed on Arc Testnet.') {
-    const receipt = await sendRegistryTx(address, method, args, (hash) => { setTx(hash); setMessage('Transaction submitted. Waiting for confirmation…'); });
+  async function write(method, args, done = 'Transaction confirmed on Arc Testnet.', overrides = {}) {
+    const receipt = await sendRegistryTx(address, method, args, (hash) => { setTx(hash); setMessage('Transaction submitted. Waiting for confirmation…'); }, overrides);
     await refresh();
+    if (account && v2) setRoles(await accountRoles(address, account));
     setMessage(done);
     return receipt;
   }
@@ -100,7 +104,7 @@ export default function Onchain() {
     setMessage('Step 2 of 2: switch to Arc Testnet and approve the registry transaction…');
     let receipt;
     try {
-      receipt = await write('submit', [subject, hash, uri, pending.entityKey], 'Report confirmed on Arc and linked to its Arkiv record.');
+      receipt = await write('submit', [subject, hash, uri, pending.entityKey], 'Report confirmed on Arc and linked to its Arkiv record.', { value: info.minStake });
     } catch (e) {
       setDual({ stage: 'retry', entityKey: pending.entityKey, arkivTx: pending.arkivTx });
       throw new Error(`${describeError(e)} Your Arkiv record is saved but is not a verified report until Arc succeeds. Submit again to retry with the same Arkiv entity.`);
@@ -242,7 +246,7 @@ export default function Onchain() {
             </>
           )}
           <button className="primary" disabled={busy || !validRegistry || info?.paused}>{v2 ? 'Sign & submit to Arkiv + Arc' : 'Sign & submit report'}</button>
-          {v2 ? <p>Two wallet approvals: an Arkiv (Rabdi) transaction paid in tGLM, then an Arc transaction paid in USDC.</p> : info && <p>This registry is v1 and has no Arkiv link. Deploy the v2 registry to enable Arkiv + Arc reports.</p>}
+          {v2 ? <p>Two wallet approvals: an Arkiv (Rabdi) transaction paid in tGLM, then an Arc transaction paid in USDC{info?.minStake !== undefined && <>, which also locks a <strong>{formatEther(info.minStake)} USDC</strong> stake. The stake is refundable if the reviewer confirms your report and is slashed if it is rejected</>}.</p> : info && <p>This registry is v1 and has no Arkiv link. Deploy the v2 registry to enable Arkiv + Arc reports.</p>}
         </form>
       </div>
 
@@ -272,6 +276,19 @@ export default function Onchain() {
               <button type="button" className="secondary" disabled={busy} onClick={() => run(() => write(info.paused ? 'unpause' : 'pause', [], info.paused ? 'Registry unpaused.' : 'Registry paused.'))}>
                 {info.paused ? 'Unpause registry' : 'Pause submissions & challenges'}
               </button>
+              <form onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); run(() => write('setMinStake', [BigInt(Math.round(Number(f.get('stake')) * 1e6)) * 10n ** 12n], 'Minimum stake updated.')); }}>
+                <label>Minimum stake in USDC (0–10)<input name="stake" type="number" min="0" max="10" step="0.000001" required defaultValue={info?.minStake !== undefined ? formatEther(info.minStake) : '0.1'} /></label>
+                <button className="secondary" disabled={busy}>Set minimum stake</button>
+              </form>
+              <form onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); run(() => write('setIssuer', [f.get('issuer'), f.get('allow') === 'yes'], 'Issuer allowlist updated.')); }}>
+                <label>Authorized issuer address<input name="issuer" required pattern="0x[a-fA-F0-9]{40}" /></label>
+                <label>Access<select name="allow"><option value="yes">Authorize</option><option value="no">Revoke</option></select></label>
+                <button className="secondary" disabled={busy}>Update issuer</button>
+              </form>
+              <form onSubmit={(e) => { e.preventDefault(); const to = new FormData(e.currentTarget).get('to'); run(() => write('setTreasury', [to], 'Treasury updated.')); }}>
+                <label>Treasury (receives stakes of rejected, unchallenged reports; current {info?.treasury ? short(info.treasury) : ''})<input name="to" required pattern="0x[a-fA-F0-9]{40}" /></label>
+                <button className="secondary" disabled={busy}>Set treasury</button>
+              </form>
               <form onSubmit={(e) => { e.preventDefault(); const to = new FormData(e.currentTarget).get('to'); run(() => write('transferReviewer', [to], 'Nomination recorded. The new reviewer must accept.')); }}>
                 <label>Nominate new reviewer (two-step; enter 0x000…000 to cancel)<input name="to" required pattern="0x[a-fA-F0-9]{40}" /></label>
                 <button className="secondary" disabled={busy}>Nominate reviewer</button>
@@ -297,6 +314,36 @@ export default function Onchain() {
         ))}
         {mine?.length > 0 && <button type="button" className="secondary" onClick={() => saveFile('aegis-arkiv-records.json', recoveryPackage({ reporter: account, records: mine.map((r) => ({ arkivEntityKey: r.entityKey, subject: r.subject, evidenceHash: r.evidenceHash, arcReportId: r.arcReportId, expiresAtBlock: String(r.expiresAt) })) }))}>Download records index</button>}
       </details>
+
+      {v2 && (
+        <div className="twocol">
+          <div className="panel inset">
+            <h3>Your stake balance</h3>
+            <p className="mono">{formatEther(roles.credits)} USDC withdrawable</p>
+            <button type="button" className="secondary" disabled={busy || !account || roles.credits === 0n} onClick={() => run(() => write('withdraw', [], 'Stake withdrawn to your wallet.'))}>Withdraw</button>
+            <form onSubmit={(e) => { e.preventDefault(); const id = BigInt(new FormData(e.currentTarget).get('id')); run(() => write('claimChallengerShare', [id], 'Challenger share credited. Withdraw it above.')); }}>
+              <label>Claim challenger share (rejected report ID)<input type="number" name="id" min="0" step="1" required /></label>
+              <button className="secondary" disabled={busy || !account}>Claim share</button>
+            </form>
+          </div>
+          <div className="panel inset">
+            <h3>Issuer coordination</h3>
+            <p>Authorized issuers record freeze or recovery requests on confirmed reports. This is a public coordination record: the contract cannot freeze funds.</p>
+            <form onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); run(() => write('recordIssuerAction', [BigInt(f.get('id')), Number(f.get('action')), evidenceHash(f.get('ref'))], 'Issuer action recorded.')); }}>
+              <label>Report ID<input type="number" name="id" min="0" step="1" required /></label>
+              <label>Action<select name="action">{ISSUER_ACTIONS.map((a, i) => <option key={a} value={i}>{a}</option>)}</select></label>
+              <label>Case reference (hashed; no personal data)<input name="ref" required maxLength={200} /></label>
+              <button className="secondary" disabled={busy || !account || !roles.isIssuer}>{roles.isIssuer ? 'Record issuer action' : 'Authorized issuers only'}</button>
+            </form>
+            <form onSubmit={(e) => { e.preventDefault(); const id = BigInt(new FormData(e.currentTarget).get('id')); run(async () => { setNotes(await issuerNotes(address, id)); setMessage(''); }); }}>
+              <label>View issuer actions for report ID<input type="number" name="id" min="0" step="1" required /></label>
+              <button className="secondary" disabled={busy || !validRegistry}>View</button>
+            </form>
+            {notes && !notes.length && <p>No issuer actions recorded.</p>}
+            {notes?.map((n, i) => <p key={i} className="mono small">{n.action} · {short(n.issuer)} · {date(n.at)} · {short(n.ref)}</p>)}
+          </div>
+        </div>
+      )}
 
       <h3 style={{ marginTop: 30 }}>Shared registry records</h3>
       <div className="tablewrap">

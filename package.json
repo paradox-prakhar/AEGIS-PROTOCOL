@@ -12,7 +12,9 @@
     "test:contracts": "node --test scripts/contracts.test.mjs",
     "test:all": "npm test && npm run test:contracts",
     "deploy:check": "node scripts/deployment-check.mjs",
-    "deploy:verify": "node scripts/verify-deployment.mjs"
+    "deploy:verify": "node scripts/verify-deployment.mjs",
+    "deploy:registry": "node scripts/deploy.mjs",
+    "e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
     "@arkiv-network/sdk": "^1.0.1",

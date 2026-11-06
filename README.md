@@ -95,3 +95,23 @@ A v2 report is written to two networks:
 **Trust rule:** anyone can write to Arkiv, so an Arkiv record counts only if an Arc report links back to it with the same entity key, reporter, subject and evidence hash (`crossCheck` in `src/risk.js`). Unlinked records are shown as ignored. If the Arc step fails, the Arkiv entity is kept and a retry reuses it.
 
 Setup: get an access key and tGLM at https://hub.arkiv.network, set `VITE_ARKIV_ACCESS_KEY` (public by design; restrict it to your origins), then deploy the v2 registry. The live v1 registry has no Arkiv link and keeps working for reads. Not yet implemented: transaction simulation, approval and interaction-history scoring.
+
+## Staking, issuers and risk signals
+
+**Staking (v2 contract).** Each report locks a native-USDC stake (reviewer-set minimum, default 0.1, max 10). Confirmed: the reporter withdraws it. Rejected: challengers of that report split it; with no challengers it goes to the treasury (defaults to the reviewer, so use a multisig). All payouts are pull-based (`withdraw`, `claimChallengerShare`), work while paused, and are covered by a reentrancy test.
+
+**Authorized issuers.** The reviewer maintains an allowlist. Issuers record `Acknowledged / FreezeRequested / FundsFrozen / Declined` against *confirmed* reports with a hashed case reference. This is a public coordination record only: the contract cannot freeze funds, and an issuer's real-world action happens offchain.
+
+**Risk signals** (`src/risk.js`, `src/signals.js`). Registry adjudication decides. Other signals add capped evidence, each counted once: dangerous simulation 40, unlimited approval / approval-for-all 25, threat feed 30 (35 if two credible sources agree), multiple open reports 15, fund-trace hit 10. Unconfirmed addresses cap at 99; confirmed is 100. Any signal that did not run is named in the result, and "Unknown" is never shown as safe.
+- *Pre-sign check* (Transaction scanner page): calldata analysis, `eth_call` and gas checks, and token transfers out of the sender when the RPC supports `eth_simulateV1` (otherwise it says so).
+- *Fund tracing*: one hop over recent ERC-20 `Transfer` logs, checked against the registry. Time- and size-limited; it reports when it is partial.
+- *Threat feeds*: set `VITE_THREAT_FEEDS` (see `.env.example`). Feeds must return the Aegis format; front any provider with a small adapter. Add each origin to the CSP.
+
+## Deploy and first end-to-end run (needs your funded testnet key)
+
+```bash
+export PRIVATE_KEY=0x…   # throwaway testnet key; read from the environment only, never printed
+npm run deploy:registry -- <reviewer address> --write      # deploys v2, verifies bytecode, writes src/deployment.json
+REGISTRY=<address> SUBJECT=<any 0x address> npm run e2e     # Arkiv entity -> Arc submit -> read back -> cross-check
+```
+`npm run e2e -- --arc-only` skips Arkiv writes. Hosting: `.github/workflows/deploy-pages.yml` (manual, no custom headers) or deploy `dist/` to Vercel/Netlify/Cloudflare, which apply the headers in `public/_headers` / `vercel.json`.

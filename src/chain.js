@@ -1,5 +1,5 @@
 // Chain access layer. Supports the deployed v1 registry and the hardened v2 registry.
-import { BrowserProvider, Contract, ContractFactory, Interface, JsonRpcProvider, isAddress, keccak256, toUtf8Bytes } from 'ethers';
+import { BrowserProvider, Contract, ContractFactory, Interface, JsonRpcProvider, formatEther, isAddress, keccak256, toUtf8Bytes } from 'ethers';
 import artifact from './registry-artifact.json';
 import v1Artifact from './registry-v1-artifact.json';
 import deployment from './deployment.json';
@@ -97,6 +97,7 @@ const toRow = (r, id) => ({
   resolvedAt: r.resolvedAt !== undefined ? Number(r.resolvedAt) : null,
   challengeCount: r.challengeCount !== undefined ? Number(r.challengeCount) : null,
   status: STATUS[Number(r.status)],
+  stake: r.stake !== undefined ? formatEther(r.stake) : null,
   arkivEntityKey: r.arkivEntityKey && !/^0x0{64}$/i.test(r.arkivEntityKey) ? r.arkivEntityKey : null,
 });
 
@@ -105,11 +106,39 @@ export async function registryInfo(address) {
   const [reviewer, count, delay] = await Promise.all([contract.reviewer(), contract.reportCount(), contract.REVIEW_DELAY()]);
   const info = { address, version, reviewer, reportCount: Number(count), reviewDelay: Number(delay), paused: false, pendingReviewer: null };
   if (version >= 2) {
-    const [paused, pending] = await Promise.all([contract.paused(), contract.pendingReviewer()]);
+    const [paused, pending, minStake, treasury] = await Promise.all([contract.paused(), contract.pendingReviewer(), contract.minStake(), contract.treasury()]);
+    info.minStake = minStake;
+    info.treasury = treasury;
     info.paused = paused;
     info.pendingReviewer = /^0x0{40}$/i.test(pending) ? null : pending;
   }
   return info;
+}
+
+export const rpcProvider = () => reader();
+
+/** Registry standing of an address: counts of confirmed and open reports (v2 aggregate; v1 has no index). */
+export async function subjectStatus(address, subject) {
+  const { contract, version } = await registry(address);
+  if (version < 2) return { confirmed: 0, open: 0 };
+  const st = await contract.subjectSummary(subject);
+  return { confirmed: Number(st.confirmed), open: Number(st.open) };
+}
+
+/** Roles and withdrawable stake for a wallet (v2 only). */
+export async function accountRoles(address, account) {
+  const { contract, version } = await registry(address);
+  if (version < 2 || !isAddress(account)) return { isIssuer: false, credits: 0n };
+  const [isIssuer, credits] = await Promise.all([contract.isIssuer(account), contract.credits(account)]);
+  return { isIssuer, credits };
+}
+
+export const ISSUER_ACTIONS = ['Acknowledged', 'FreezeRequested', 'FundsFrozen', 'Declined'];
+
+export async function issuerNotes(address, id) {
+  const { contract, version } = await registry(address);
+  if (version < 2) return [];
+  return (await contract.issuerNotes(id)).map((n) => ({ issuer: n.issuer, action: ISSUER_ACTIONS[Number(n.action)], at: Number(n.recordedAt), ref: n.ref }));
 }
 
 /** Newest-first page of reports. `before` is an exclusive upper id bound (defaults to the newest). */
@@ -170,6 +199,14 @@ const FRIENDLY = {
   NotPendingReviewer: 'Only the nominated reviewer can accept the role.',
   IsPaused: 'The registry is paused by the reviewer. Submissions and challenges are disabled.',
   InvalidPage: 'Invalid page request.',
+  StakeTooLow: 'The attached stake is below the registry minimum.',
+  InvalidStake: 'That minimum stake is above the allowed maximum (10 USDC).',
+  NotIssuer: 'Only an authorized issuer can record issuer actions.',
+  ReportNotConfirmed: 'Issuer actions can only be recorded on confirmed reports.',
+  NotRejected: 'Challenger shares exist only for rejected reports.',
+  NoShare: 'You have no unclaimed challenger share on that report.',
+  NothingToWithdraw: 'You have no stake to withdraw.',
+  TransferFailed: 'The payout transfer failed.',
 };
 
 export function describeError(e) {
@@ -190,12 +227,13 @@ export function describeError(e) {
  * Simulates then sends a registry transaction. v1 does not accept evidence URIs; they are dropped.
  * Calls `onSubmitted(hash)` once the wallet broadcasts it. Resolves with the confirmed receipt.
  */
-export async function sendRegistryTx(address, method, args, onSubmitted = () => {}) {
+export async function sendRegistryTx(address, method, args, onSubmitted = () => {}, overrides = {}) {
   const { contract, version } = await registry(address, true);
   const finalArgs = version < 2 && (method === 'submit' || method === 'challenge') ? args.slice(0, 2) : args;
   if (version < 2 && !['submit', 'challenge', 'resolve'].includes(method)) throw new Error('This action requires a v2 registry.');
-  await contract[method].staticCall(...finalArgs);
-  const tx = await contract[method](...finalArgs);
+  const extra = Object.keys(overrides).length ? [overrides] : [];
+  await contract[method].staticCall(...finalArgs, ...extra);
+  const tx = await contract[method](...finalArgs, ...extra);
   onSubmitted(tx.hash);
   const receipt = await tx.wait(1);
   if (!receipt || receipt.status !== 1) throw new Error('Transaction reverted.');

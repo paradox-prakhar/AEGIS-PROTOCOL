@@ -35,3 +35,11 @@ Do not open public issues for vulnerabilities. Contact the maintainers privately
 - The Arkiv access key is public by design. Restrict it to your site origins in Arkiv Hub. Never place a private key in any `VITE_` variable.
 - The production dependency tree audits clean (`npm audit --omit=dev`). Dev-only tooling (ganache) bundles old packages that never ship to the browser.
 - Not independently audited. Do not use with real funds until an external audit is complete.
+
+## Staking, issuers and signals
+
+- The contract now holds user funds (stakes). Payouts are pull-based with the balance zeroed before the transfer, and a reentrancy attacker contract is part of the test suite. The reviewer and treasury are trusted roles: use a multisig, because a single reviewer who is also the treasury profits from rejections.
+- Issuer actions are records, not enforcement. Treat a `FundsFrozen` note as a claim by the issuer, not proof.
+- Threat feeds are untrusted input: https only, strict schema, timeouts, references limited to https, one failing feed never blocks the others.
+- A clean simulation, trace or feed result is not a safety guarantee, and the UI says so.
+- Still required before real funds: independent audit of the staking logic, a multisig reviewer, and a decision on slashing policy.
