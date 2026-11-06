@@ -1,0 +1,157 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  BookOpen, ChevronDown, Copy, ExternalLink, FileWarning, Gavel, LayoutDashboard, LifeBuoy, LogOut,
+  Menu, Rocket, ScanLine, Shield, Database, Wallet, X, AlertTriangle, Droplets,
+} from 'lucide-react';
+import { CHAIN_NAME, FAUCET, explorerAddress } from '../chain';
+import { useWallet } from '../state/wallet';
+import { useRegistry } from '../state/registry';
+import { useToast } from '../state/toast';
+import { formatUsdc, shortAddress } from '../lib/format';
+import { Button } from './ui';
+
+export const NAV = [
+  { group: 'Protect', items: [
+    ['overview', 'Overview', LayoutDashboard],
+    ['scanner', 'Address scanner', ScanLine],
+    ['registry', 'Threat registry', Database],
+  ] },
+  { group: 'Act', items: [
+    ['report', 'Submit report', FileWarning],
+    ['review', 'Challenge & review', Gavel],
+    ['recovery', 'Recovery center', LifeBuoy],
+  ] },
+  { group: 'Operate', items: [
+    ['deploy', 'Deploy registry', Rocket],
+    ['about', 'Trust & architecture', BookOpen],
+  ] },
+];
+
+export const TITLES = Object.fromEntries(NAV.flatMap((g) => g.items.map(([k, t]) => [k, t])));
+
+function Sidebar({ path, open, onClose }) {
+  const reg = useRegistry();
+  const pending = reg.counts.Pending + reg.counts.Challenged;
+  return (
+    <>
+      <div className={`scrim ${open ? 'show' : ''}`} onClick={onClose} />
+      <aside className={`sidebar ${open ? 'open' : ''}`}>
+        <div className="sidebar-top">
+          <a className="brand" href="#/overview" onClick={onClose}>
+            <span className="brand-mark"><Shield size={20} /></span>
+            <span className="brand-text">Aegis<small>Protocol</small></span>
+          </a>
+          <button className="icon-btn sidebar-close" aria-label="Close menu" onClick={onClose}><X size={18} /></button>
+        </div>
+        <nav>
+          {NAV.map((g) => (
+            <div key={g.group} className="nav-group">
+              <div className="nav-label">{g.group}</div>
+              {g.items.map(([key, label, Icon]) => (
+                <a key={key} href={`#/${key}`} className={`nav-item ${path === key ? 'active' : ''}`} onClick={onClose} aria-current={path === key ? 'page' : undefined}>
+                  <Icon size={17} />
+                  <span>{label}</span>
+                  {key === 'registry' && reg.rows.length > 0 && <small className="nav-count">{reg.rows.length}</small>}
+                  {key === 'review' && pending > 0 && <small className="nav-count warn">{pending}</small>}
+                </a>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-foot">
+          <div className="netcard">
+            <div className="netcard-row">
+              <span className={`live-dot ${reg.available ? '' : reg.loading ? 'loading' : 'down'}`} />
+              <b>{CHAIN_NAME}</b>
+              <span className="tag">TESTNET</span>
+            </div>
+            <div className="netcard-meta">
+              {reg.meta ? <>Block <code>#{reg.meta.blockNumber.toLocaleString()}</code></> : reg.loading ? 'Connecting…' : 'Registry unavailable'}
+            </div>
+          </div>
+          <p className="sidebar-note">Testnet prototype · not audited</p>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function WalletMenu() {
+  const w = useWallet();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const close = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+
+  if (!w.installed) {
+    return <a className="btn btn-secondary" href="https://metamask.io/download/" target="_blank" rel="noreferrer"><Wallet size={16} />Install wallet</a>;
+  }
+  if (!w.isConnected) {
+    return (
+      <Button icon={Wallet} loading={w.connecting} onClick={() => w.connect().then(() => toast('Wallet connected to Arc Testnet.', 'success')).catch(() => {})}>
+        Connect wallet
+      </Button>
+    );
+  }
+  if (w.wrongNetwork) {
+    return <Button variant="warning" icon={AlertTriangle} onClick={w.switchNetwork}>Switch to Arc</Button>;
+  }
+  return (
+    <div className="wallet-menu" ref={ref}>
+      <button className="wallet-chip" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span className="avatar" style={{ '--h': parseInt(w.account.slice(2, 6), 16) % 360 }} />
+        <span className="wallet-chip-text">
+          <b>{shortAddress(w.account)}</b>
+          <small>{w.balance ? `${formatUsdc(w.balance)} USDC` : '— USDC'}</small>
+        </span>
+        <ChevronDown size={15} />
+      </button>
+      {open && (
+        <div className="menu">
+          <div className="menu-head">
+            <small className="muted">Connected account</small>
+            <code>{w.account}</code>
+          </div>
+          <button onClick={() => { navigator.clipboard?.writeText(w.account); toast('Address copied.', 'success'); setOpen(false); }}><Copy size={15} />Copy address</button>
+          <a href={explorerAddress(w.account)} target="_blank" rel="noreferrer"><ExternalLink size={15} />View on explorer</a>
+          <a href={FAUCET} target="_blank" rel="noreferrer"><Droplets size={15} />Get test USDC</a>
+          <button onClick={() => { w.disconnect(); setOpen(false); }}><LogOut size={15} />Disconnect</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Layout({ path, children }) {
+  const [menu, setMenu] = useState(false);
+  const w = useWallet();
+  const toast = useToast();
+  useEffect(() => { if (w.error) { toast(w.error, 'error'); w.clearError(); } }, [w.error]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="shell">
+      <Sidebar path={path} open={menu} onClose={() => setMenu(false)} />
+      <div className="main">
+        <header className="topbar">
+          <button className="icon-btn menu-btn" aria-label="Open menu" onClick={() => setMenu(true)}><Menu size={20} /></button>
+          <div className="crumbs"><span>Aegis</span><span className="sep">/</span><b>{TITLES[path] || 'Not found'}</b></div>
+          <WalletMenu />
+        </header>
+        {w.wrongNetwork && (
+          <div className="netbanner">
+            <AlertTriangle size={16} />Your wallet is on another network. Aegis only works on Arc Testnet.
+            <button onClick={w.switchNetwork}>Switch network</button>
+          </div>
+        )}
+        <main className="content">{children}</main>
+        <footer className="footer">
+          <span><Shield size={13} /> Aegis Protocol · Arc Testnet prototype</span>
+          <span>Reports are public allegations, not proof. Never share seed phrases or private keys.</span>
+        </footer>
+      </div>
+    </div>
+  );
+}

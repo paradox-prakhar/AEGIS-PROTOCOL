@@ -54,8 +54,11 @@ flowchart LR
   Local --> Export[JSON export]
 ```
 
-- `src/chain.js`: chain configuration, wallet connection, contract reads and deployment.
-- `src/Onchain.jsx`: wallet and onchain lifecycle interface.
+- `src/chain.js`: chain configuration, wallet connection, contract reads/writes, deployment and error mapping.
+- `src/main.jsx`, `src/App.jsx`: entry point, providers and hash routing.
+- `src/state/`: wallet, registry, toast and transaction (simulate → sign → confirm) state.
+- `src/components/`: layout shell, UI primitives, scanner and evidence verifier.
+- `src/pages/`: Overview, Scanner, Threat registry, Submit report, Challenge & review, Recovery, Deploy, Trust & architecture.
 - `src/risk.js`: local screening policy.
 - `contracts/AegisRegistry.sol`: report, challenge and trusted-reviewer adjudication.
 - `scripts/compile.mjs`: Solidity compilation and frontend ABI/bytecode generation.
