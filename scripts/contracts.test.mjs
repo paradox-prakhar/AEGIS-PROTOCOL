@@ -8,6 +8,7 @@ const v2 = JSON.parse(fs.readFileSync('src/registry-artifact.json', 'utf8'));
 const v1 = JSON.parse(fs.readFileSync('src/registry-v1-artifact.json', 'utf8'));
 const H = (s) => keccak256(toUtf8Bytes(s));
 const DAY = 86400;
+const K = H('arkiv-entity-key');
 const Status = { Pending: 0n, Challenged: 1n, Confirmed: 2n, Rejected: 3n };
 
 async function setup(artifact = v2) {
@@ -58,19 +59,22 @@ test('v2 submission validation, indexing and duplicate protection', async () => 
   try {
     const s = await addr(subject);
     const r = c.connect(reporter);
-    await revertsWith(r.submit.staticCall(ZeroAddress, H('x'), ''), 'ZeroAddress');
-    await revertsWith(r.submit.staticCall(s, ZeroHash, ''), 'InvalidEvidence');
-    await revertsWith(r.submit.staticCall(s, H('x'), 'x'.repeat(257)), 'UriTooLong');
-    await revertsWith(r.submit.staticCall(await addr(reporter), H('x'), ''), 'SelfReport');
+    await revertsWith(r.submit.staticCall(ZeroAddress, H('x'), '', K), 'ZeroAddress');
+    await revertsWith(r.submit.staticCall(s, ZeroHash, '', K), 'InvalidEvidence');
+    await revertsWith(r.submit.staticCall(s, H('x'), '', ZeroHash), 'InvalidArkivKey');
+    await revertsWith(r.submit.staticCall(s, H('x'), 'x'.repeat(257), K), 'UriTooLong');
+    await revertsWith(r.submit.staticCall(await addr(reporter), H('x'), '', K), 'SelfReport');
 
-    const receipt = await (await r.submit(s, H('evidence'), 'ipfs://cid')).wait();
+    const receipt = await (await r.submit(s, H('evidence'), 'ipfs://cid', K)).wait();
     const log = c.interface.parseLog(receipt.logs[0]);
     assert.equal(log.name, 'Submitted');
     assert.equal(log.args.reporter, await addr(reporter));
     assert.equal(log.args.evidenceURI, 'ipfs://cid');
+    assert.equal(log.args.arkivEntityKey, K);
+    assert.equal((await c.reports(0)).arkivEntityKey, K);
 
-    await revertsWith(r.submit.staticCall(s, H('again'), ''), 'DuplicateOpenReport');
-    await (await c.connect(other).submit(s, H('second'), '')).wait();
+    await revertsWith(r.submit.staticCall(s, H('again'), '', K), 'DuplicateOpenReport');
+    await (await c.connect(other).submit(s, H('second'), '', K)).wait();
 
     assert.equal(await c.reportCount(), 2n);
     assert.equal(await c.subjectReportCount(s), 2n);
@@ -92,7 +96,7 @@ test('v2 submission validation, indexing and duplicate protection', async () => 
 test('v2 challenge rules', async () => {
   const { rpc, c, reporter, challenger, subject, addr } = await setup();
   try {
-    await (await c.connect(reporter).submit(await addr(subject), H('e'), '')).wait();
+    await (await c.connect(reporter).submit(await addr(subject), H('e'), '', K)).wait();
     await revertsWith(c.connect(challenger).challenge.staticCall(7, H('c'), ''), 'ReportNotFound');
     await revertsWith(c.connect(reporter).challenge.staticCall(0, H('c'), ''), 'ReporterCannotChallenge');
     await revertsWith(c.connect(challenger).challenge.staticCall(0, ZeroHash, ''), 'InvalidEvidence');
@@ -109,8 +113,8 @@ test('v2 resolution: access, review window, accounting and closed reports', asyn
   const { rpc, c, reporter, challenger, subject, other, advance, addr } = await setup();
   try {
     const s = await addr(subject);
-    await (await c.connect(reporter).submit(s, H('a'), '')).wait();
-    await (await c.connect(other).submit(s, H('b'), '')).wait();
+    await (await c.connect(reporter).submit(s, H('a'), '', K)).wait();
+    await (await c.connect(other).submit(s, H('b'), '', K)).wait();
     await revertsWith(c.connect(reporter).resolve.staticCall(0, true), 'NotReviewer');
     await revertsWith(c.resolve.staticCall(0, true), 'ReviewWindowActive');
     await revertsWith(c.resolve.staticCall(9, true), 'ReportNotFound');
@@ -126,7 +130,7 @@ test('v2 resolution: access, review window, accounting and closed reports', asyn
     await revertsWith(c.resolve.staticCall(0, false), 'ReportClosed');
     await revertsWith(c.connect(challenger).challenge.staticCall(0, H('late'), ''), 'ReportClosed');
     // A reporter may file a fresh report once the previous one is closed.
-    await (await c.connect(reporter).submit(s, H('new evidence'), '')).wait();
+    await (await c.connect(reporter).submit(s, H('new evidence'), '', K)).wait();
     assert.equal(await c.hasOpenReport(s, await addr(reporter)), true);
   } finally { await rpc.disconnect(); }
 });
@@ -134,16 +138,16 @@ test('v2 resolution: access, review window, accounting and closed reports', asyn
 test('v2 pause blocks public writes but not adjudication', async () => {
   const { rpc, c, reporter, challenger, subject, advance, addr } = await setup();
   try {
-    await (await c.connect(reporter).submit(await addr(subject), H('a'), '')).wait();
+    await (await c.connect(reporter).submit(await addr(subject), H('a'), '', K)).wait();
     await revertsWith(c.connect(reporter).pause.staticCall(), 'NotReviewer');
     await (await c.pause()).wait();
     assert.equal(await c.paused(), true);
-    await revertsWith(c.connect(challenger).submit.staticCall(await addr(subject), H('b'), ''), 'IsPaused');
+    await revertsWith(c.connect(challenger).submit.staticCall(await addr(subject), H('b'), '', K), 'IsPaused');
     await revertsWith(c.connect(challenger).challenge.staticCall(0, H('b'), ''), 'IsPaused');
     await advance(2 * DAY + 1);
     await (await c.resolve(0, false)).wait();
     await (await c.unpause()).wait();
-    await (await c.connect(challenger).submit(await addr(subject), H('b'), '')).wait();
+    await (await c.connect(challenger).submit(await addr(subject), H('b'), '', K)).wait();
   } finally { await rpc.disconnect(); }
 });
 

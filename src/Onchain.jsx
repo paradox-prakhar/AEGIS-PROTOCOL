@@ -1,12 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { formatEther, isAddress } from 'ethers';
 import {
   activeRegistry, addressUrl, configuredRegistry, connectWallet, defaultReviewer, deployRegistry, describeError,
-  evidenceHash, expectedDeployer, fetchReports, registryInfo, rememberRegistry, sendRegistryTx, txUrl,
+  evidenceHash, expectedDeployer, fetchReports, registryInfo, rememberRegistry, reportIdFromReceipt, sendRegistryTx, txUrl,
 } from './chain';
+import { CATEGORIES, MAX_DESCRIPTION, arkivEntityUrl, arkivTxUrl } from './arkiv-meta';
+const arkiv = () => import('./arkiv');
 
 const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
 const date = (s) => (s ? new Date(s * 1000).toLocaleString() : '—');
+const PENDING_KEY = 'aegis-pending-arkiv';
+const loadPending = () => { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { return null; } };
+const savePending = (v) => { try { v ? localStorage.setItem(PENDING_KEY, JSON.stringify(v)) : localStorage.removeItem(PENDING_KEY); } catch { /* storage unavailable */ } };
 const same = (a, b) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
 
 export default function Onchain() {
@@ -21,6 +26,8 @@ export default function Onchain() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [tx, setTx] = useState('');
+  const [dual, setDual] = useState(null);
+  const busyRef = useRef(false);
 
   const validRegistry = isAddress(address);
   const isReviewer = same(account, info?.reviewer);
@@ -30,7 +37,7 @@ export default function Onchain() {
   useEffect(() => {
     const eth = window.ethereum;
     if (!eth?.on) return undefined;
-    const reset = () => { setAccount(''); setBalance(''); setMessage('Wallet account or network changed. Reconnect before continuing.'); };
+    const reset = () => { if (busyRef.current) return; setAccount(''); setBalance(''); setMessage('Wallet account or network changed. Reconnect before continuing.'); };
     eth.on('accountsChanged', reset);
     eth.on('chainChanged', reset);
     return () => { eth.removeListener?.('accountsChanged', reset); eth.removeListener?.('chainChanged', reset); };
@@ -54,8 +61,8 @@ export default function Onchain() {
   }, []);
 
   async function run(fn) {
-    setBusy(true); setError(''); setTx(''); setMessage('Waiting for wallet or network confirmation…');
-    try { await fn(); } catch (e) { setError(describeError(e)); setMessage(''); } finally { setBusy(false); }
+    busyRef.current = true; setBusy(true); setError(''); setTx(''); setMessage('Waiting for wallet or network confirmation…');
+    try { await fn(); } catch (e) { setError(describeError(e)); setMessage(''); } finally { busyRef.current = false; setBusy(false); }
   }
 
   async function connect() {
@@ -67,9 +74,45 @@ export default function Onchain() {
   }
 
   async function write(method, args, done = 'Transaction confirmed on Arc Testnet.') {
-    await sendRegistryTx(address, method, args, (hash) => { setTx(hash); setMessage('Transaction submitted. Waiting for confirmation…'); });
+    const receipt = await sendRegistryTx(address, method, args, (hash) => { setTx(hash); setMessage('Transaction submitted. Waiting for confirmation…'); });
     await refresh();
     setMessage(done);
+    return receipt;
+  }
+
+  // One report, two networks: Arkiv entity first (public, queryable), then Arc (adjudicated source of truth).
+  async function submitBoth(f) {
+    const subject = String(f.get('subject'));
+    const hash = evidenceHash(f.get('evidence'));
+    const uri = String(f.get('uri') || '').trim();
+    const category = String(f.get('category'));
+    const description = String(f.get('description') || '').trim();
+    let pending = loadPending();
+    if (!pending || !same(pending.subject, subject) || pending.evidenceHash !== hash || pending.registry !== address) {
+      setDual({ stage: 'arkiv' });
+      setMessage('Step 1 of 2: approve the Arkiv (Rabdi) transaction in your wallet…');
+      const made = await (await arkiv()).createArkivReport({ subject, category, evidenceHash: hash, description });
+      pending = { subject, evidenceHash: hash, registry: address, entityKey: made.entityKey, arkivTx: made.txHash, reporter: made.reporter };
+      savePending(pending);
+    }
+    setDual({ stage: 'arc', entityKey: pending.entityKey, arkivTx: pending.arkivTx });
+    setMessage('Step 2 of 2: switch to Arc Testnet and approve the registry transaction…');
+    let receipt;
+    try {
+      receipt = await write('submit', [subject, hash, uri, pending.entityKey], 'Report confirmed on Arc and linked to its Arkiv record.');
+    } catch (e) {
+      setDual({ stage: 'retry', entityKey: pending.entityKey, arkivTx: pending.arkivTx });
+      throw new Error(`${describeError(e)} Your Arkiv record is saved but is not a verified report until Arc succeeds. Submit again to retry with the same Arkiv entity.`);
+    }
+    savePending(null);
+    setDual({ stage: 'done', entityKey: pending.entityKey, arkivTx: pending.arkivTx, arcTx: receipt.hash, reportId: reportIdFromReceipt(receipt, address) });
+  }
+
+  async function linkBack() {
+    setMessage('Approve the Arkiv transaction that records the Arc report id on your entity…');
+    const { txHash } = await (await arkiv()).linkArcReport(dual.entityKey, { arcReportId: dual.reportId, arcTxHash: dual.arcTx });
+    setDual({ ...dual, linkTx: txHash });
+    setMessage('Arc report id recorded on Arkiv.');
   }
 
   function onForm(e, method) {
@@ -78,6 +121,7 @@ export default function Onchain() {
     const f = new FormData(form);
     const uri = String(f.get('uri') || '').trim();
     let args;
+    if (method === 'submit' && v2) { run(async () => { await submitBoth(f); form.reset(); }); return; }
     if (method === 'submit') args = [f.get('subject'), evidenceHash(f.get('evidence')), uri];
     else if (method === 'challenge') args = [BigInt(f.get('id')), evidenceHash(f.get('evidence')), uri];
     else args = [BigInt(f.get('id')), f.get('decision') === 'confirm'];
@@ -120,6 +164,16 @@ export default function Onchain() {
         {tx && <p><a href={txUrl(tx)} target="_blank" rel="noreferrer">View transaction on explorer ↗</a></p>}
       </div>
 
+      {dual && (
+        <div className="notice" role="status">
+          <strong>{dual.stage === 'done' ? 'Report on both networks' : dual.stage === 'retry' ? 'Arc step failed. Arkiv record kept' : 'Submitting…'}</strong>
+          {dual.entityKey && <p className="mono small">Arkiv entity: <a href={arkivEntityUrl(dual.entityKey)} target="_blank" rel="noreferrer">{short(dual.entityKey)} ↗</a>{dual.arkivTx && <> · <a href={arkivTxUrl(dual.arkivTx)} target="_blank" rel="noreferrer">Arkiv tx ↗</a></>}</p>}
+          {dual.arcTx && <p className="mono small">Arc report #{dual.reportId ?? '?'} · <a href={txUrl(dual.arcTx)} target="_blank" rel="noreferrer">Arc tx ↗</a></p>}
+          {dual.stage === 'done' && !dual.linkTx && dual.reportId !== null && <button type="button" className="secondary" disabled={busy} onClick={() => run(linkBack)}>Record Arc report id on Arkiv (optional)</button>}
+          {dual.linkTx && <p className="mono small"><a href={arkivTxUrl(dual.linkTx)} target="_blank" rel="noreferrer">Arkiv link tx ↗</a></p>}
+        </div>
+      )}
+
       {info && (
         <div className="stats compact">
           <article><div>Registry</div><strong className="mono small"><a href={addressUrl(info.address)} target="_blank" rel="noreferrer">{short(info.address)} ↗</a></strong><p>Contract v{info.version}</p></article>
@@ -153,8 +207,15 @@ export default function Onchain() {
           <label>Evidence package (keep an exact copy; only its hash is published)
             <textarea name="evidence" required minLength={20} maxLength={20000} />
           </label>
-          {v2 && <label>Evidence URI (optional, e.g. ipfs://…; no personal data)<input name="uri" maxLength={256} /></label>}
-          <button className="primary" disabled={busy || !validRegistry || info?.paused}>Sign & submit report</button>
+          {v2 && (
+            <>
+              <label>Category<select name="category">{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>
+              <label>Public summary (stored on Arkiv; no personal data, max {MAX_DESCRIPTION} chars)<input name="description" required maxLength={MAX_DESCRIPTION} /></label>
+              <label>Evidence URI (optional, e.g. ipfs://…; no personal data)<input name="uri" maxLength={256} /></label>
+            </>
+          )}
+          <button className="primary" disabled={busy || !validRegistry || info?.paused}>{v2 ? 'Sign & submit to Arkiv + Arc' : 'Sign & submit report'}</button>
+          {v2 ? <p>Two wallet approvals: an Arkiv (Rabdi) transaction paid in tGLM, then an Arc transaction paid in USDC.</p> : info && <p>This registry is v1 and has no Arkiv link. Deploy the v2 registry to enable Arkiv + Arc reports.</p>}
         </form>
       </div>
 
@@ -197,7 +258,7 @@ export default function Onchain() {
       <h3 style={{ marginTop: 30 }}>Shared registry records</h3>
       <div className="tablewrap">
         <table>
-          <thead><tr><th>ID</th><th>SUBJECT</th><th>STATUS</th><th>CREATED</th><th>REPORTER</th><th>EVIDENCE HASH</th></tr></thead>
+          <thead><tr><th>ID</th><th>SUBJECT</th><th>STATUS</th><th>CREATED</th><th>REPORTER</th><th>EVIDENCE HASH</th><th>ARKIV</th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
@@ -207,6 +268,7 @@ export default function Onchain() {
                 <td>{date(r.createdAt)}</td>
                 <td className="mono">{short(r.reporter)}</td>
                 <td className="mono" title={r.evidenceHash}>{r.evidenceHash.slice(0, 18)}…</td>
+                <td className="mono">{r.arkivEntityKey ? <a href={arkivEntityUrl(r.arkivEntityKey)} target="_blank" rel="noreferrer">{short(r.arkivEntityKey)} ↗</a> : '—'}</td>
               </tr>
             ))}
           </tbody>

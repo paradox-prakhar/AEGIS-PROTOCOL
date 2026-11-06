@@ -84,3 +84,14 @@ See [SETUP.md](SETUP.md). Summary: build with `npm run build` and serve `dist/` 
 - Evidence text stays offchain. Only hashes and optional URIs are published, so reporters must preserve exact copies.
 - Recovery incidents are browser-local. IPFS pinning, transaction simulation, fund tracing and issuer coordination are not implemented.
 - The local EVM tooling (Ganache) is a dev dependency with known advisories. It is not shipped in the browser bundle.
+
+## Arkiv + Arc reports
+
+A v2 report is written to two networks:
+
+1. **Arkiv (Rabdi testnet, gas in tGLM):** a public, queryable entity (`aegis-protocol.scam-reports`) holding the subject, category, reporter, evidence hash and a short public summary. Evidence text never leaves the reporter's machine.
+2. **Arc (gas in USDC):** `submit(subject, evidenceHash, uri, arkivEntityKey)` stores the Arkiv entity key. The reviewer adjudicates on Arc.
+
+**Trust rule:** anyone can write to Arkiv, so an Arkiv record counts only if an Arc report links back to it with the same entity key, reporter, subject and evidence hash (`crossCheck` in `src/risk.js`). Unlinked records are shown as ignored. If the Arc step fails, the Arkiv entity is kept and a retry reuses it.
+
+Setup: get an access key and tGLM at https://hub.arkiv.network, set `VITE_ARKIV_ACCESS_KEY` (public by design; restrict it to your origins), then deploy the v2 registry. The live v1 registry has no Arkiv link and keeps working for reads. Not yet implemented: transaction simulation, approval and interaction-history scoring.

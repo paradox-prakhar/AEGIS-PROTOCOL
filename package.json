@@ -15,10 +15,12 @@
     "deploy:verify": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
+    "@arkiv-network/sdk": "^1.0.1",
     "ethers": "^6.17.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "viem": "^2.57.16"
   },
   "devDependencies": {
     "ganache": "^7.9.2",

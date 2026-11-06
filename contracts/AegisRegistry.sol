@@ -27,6 +27,7 @@ contract AegisRegistry {
         uint64 resolvedAt;
         uint32 challengeCount;
         Status status;
+        bytes32 arkivEntityKey;
     }
 
     struct SubjectStats {
@@ -68,7 +69,8 @@ contract AegisRegistry {
         address indexed subject,
         address indexed reporter,
         bytes32 evidenceHash,
-        string evidenceURI
+        string evidenceURI,
+        bytes32 arkivEntityKey
     );
     event Challenge(uint256 indexed id, address indexed challenger, bytes32 evidenceHash, string evidenceURI);
     event Resolved(uint256 indexed id, Status status, address indexed reviewer);
@@ -83,6 +85,7 @@ contract AegisRegistry {
 
     error ZeroAddress();
     error InvalidEvidence();
+    error InvalidArkivKey();
     error UriTooLong();
     error SelfReport();
     error DuplicateOpenReport();
@@ -124,13 +127,17 @@ contract AegisRegistry {
     /// @param subject Address alleged to be malicious.
     /// @param evidenceHash keccak256 of the exact evidence package kept offchain by the reporter.
     /// @param evidenceURI Optional pointer (e.g. ipfs://CID). Must not contain personal data.
-    function submit(address subject, bytes32 evidenceHash, string calldata evidenceURI)
+    /// @param arkivEntityKey Key of the report entity the reporter created on Arkiv. Arkiv is public and
+    ///        anyone can write to it, so this link is only meaningful when the Arkiv entity's reporter
+    ///        equals this report's reporter; clients must check that before trusting the entity.
+    function submit(address subject, bytes32 evidenceHash, string calldata evidenceURI, bytes32 arkivEntityKey)
         external
         whenNotPaused
         returns (uint256 id)
     {
         if (subject == address(0)) revert ZeroAddress();
         if (evidenceHash == bytes32(0)) revert InvalidEvidence();
+        if (arkivEntityKey == bytes32(0)) revert InvalidArkivKey();
         if (bytes(evidenceURI).length > MAX_URI_LENGTH) revert UriTooLong();
         if (subject == msg.sender) revert SelfReport();
         if (hasOpenReport[subject][msg.sender]) revert DuplicateOpenReport();
@@ -144,7 +151,8 @@ contract AegisRegistry {
                 createdAt: uint64(block.timestamp),
                 resolvedAt: 0,
                 challengeCount: 0,
-                status: Status.Pending
+                status: Status.Pending,
+                arkivEntityKey: arkivEntityKey
             })
         );
         _subjectReports[subject].push(id);
@@ -154,7 +162,7 @@ contract AegisRegistry {
             st.total += 1;
             st.open += 1;
         }
-        emit Submitted(id, subject, msg.sender, evidenceHash, evidenceURI);
+        emit Submitted(id, subject, msg.sender, evidenceHash, evidenceURI, arkivEntityKey);
     }
 
     /// @notice Publicly dispute an open report with counter-evidence.

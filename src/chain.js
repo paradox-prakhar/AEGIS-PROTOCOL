@@ -97,6 +97,7 @@ const toRow = (r, id) => ({
   resolvedAt: r.resolvedAt !== undefined ? Number(r.resolvedAt) : null,
   challengeCount: r.challengeCount !== undefined ? Number(r.challengeCount) : null,
   status: STATUS[Number(r.status)],
+  arkivEntityKey: r.arkivEntityKey && !/^0x0{64}$/i.test(r.arkivEntityKey) ? r.arkivEntityKey : null,
 });
 
 export async function registryInfo(address) {
@@ -156,6 +157,7 @@ const errorInterface = new Interface(artifact.abi);
 const FRIENDLY = {
   ZeroAddress: 'The address cannot be the zero address.',
   InvalidEvidence: 'Evidence hash is empty.',
+  InvalidArkivKey: 'The Arkiv entity key is missing.',
   UriTooLong: 'Evidence URI is longer than 256 characters.',
   SelfReport: 'You cannot report your own connected address.',
   DuplicateOpenReport: 'You already have an open report against this address.',
@@ -198,6 +200,18 @@ export async function sendRegistryTx(address, method, args, onSubmitted = () => 
   const receipt = await tx.wait(1);
   if (!receipt || receipt.status !== 1) throw new Error('Transaction reverted.');
   return receipt;
+}
+
+/** Report id from the Submitted event of a confirmed v2 submit transaction, or null. */
+export function reportIdFromReceipt(receipt, registryAddress) {
+  for (const log of receipt?.logs ?? []) {
+    if (registryAddress && log.address.toLowerCase() !== registryAddress.toLowerCase()) continue;
+    try {
+      const parsed = errorInterface.parseLog(log);
+      if (parsed?.name === 'Submitted') return Number(parsed.args.id);
+    } catch { /* not a registry event */ }
+  }
+  return null;
 }
 
 export async function deployRegistry(reviewer, onSubmitted = () => {}) {
