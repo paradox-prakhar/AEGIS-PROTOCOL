@@ -1,0 +1,24 @@
+{
+  "schema": "aegis.test-evidence.v1",
+  "classification": "TEST / SIMULATED",
+  "isTest": true,
+  "title": "Aegis Protocol synthetic phishing workflow test",
+  "subject": "0x1111111111111111111111111111111111111111",
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "category": "PHISHING (SIMULATED)",
+  "publicEvidence": "Synthetic transaction hash and mock phishing evidence generated specifically for testing. No real victim or scam allegation is involved.",
+  "mockTransaction": {
+    "label": "TEST / SIMULATED — not a real transaction",
+    "hash": "0x684d8ff171821b604f6b1b00ba6a72695cb9ad9d187e30665bf1b85773cf8bee",
+    "existsOnchain": false,
+    "derivation": "Keccak-256 of a fixed synthetic test seed; not a blockchain receipt"
+  },
+  "mockPhishingEvidence": {
+    "label": "TEST / SIMULATED — fictional scenario",
+    "url": "https://aegis-phishing-demo.invalid/claim",
+    "description": "Fictional claim page requesting a token approval. No site was visited, no approval was requested, and no funds were stolen."
+  },
+  "realVictim": false,
+  "realScamAllegation": false
+}

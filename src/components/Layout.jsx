@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BookOpen, ChevronDown, Copy, ExternalLink, FileWarning, Gavel, LayoutDashboard, LifeBuoy, LogOut,
-  Menu, Rocket, ScanLine, Shield, Database, Wallet, X, AlertTriangle, Droplets, GraduationCap, ListChecks, Phone, HeartHandshake,
+  Menu, Rocket, ScanLine, Shield, Database, Wallet, X, AlertTriangle, Droplets, GraduationCap, ListChecks, Phone, HeartHandshake, Archive, Wrench,
 } from 'lucide-react';
 import { SpotlightNavbar } from './vengeance/spotlight-navbar';
 import { ScrollProgress } from './motion';
@@ -27,8 +27,10 @@ export const NAV = [
     ['registry', 'Threat registry', Database],
     ['report', 'Submit report', FileWarning],
     ['review', 'Challenge & review', Gavel],
+    ['arkiv', 'Arkiv evidence', Archive],
   ] },
   { group: 'Operate', items: [
+    ['onchain', 'Onchain workspace', Wrench],
     ['deploy', 'Deploy registry', Rocket],
     ['about', 'Trust & architecture', BookOpen],
   ] },

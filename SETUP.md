@@ -1,5 +1,19 @@
 # Arc Testnet setup and deployment
 
+## Upgrading to the v2 registry (recommended)
+
+The live shared registry is v1. Deploy v2 once and switch every client to it. v1 data is not migrated; v1 stays readable at its address.
+
+1. Decide the reviewer. For production, use a multisig (e.g. a Safe on Arc, if available). Use the existing reviewer wallet for testnet. The reviewer can later be rotated with the two-step `transferReviewer`/`acceptReviewer` flow in the UI.
+2. Run a read-only estimate (about 1.36M gas, ~0.065 test USDC at the time of writing):
+   `npm run deploy:check -- 0x2Df43B66A31cd93792E4a32Af494b5a18c614148 <reviewer>`
+3. `npm run dev`, open **Onchain platform**, connect the deployer wallet, expand **Deploy a new v2 registry**, check the reviewer and sign.
+4. Verify and record the deployment. This writes `src/deployment.json`, which the frontend uses by default:
+   `npm run deploy:verify -- <deploymentTxHash> <deployer> <reviewer> --write`
+5. Update `VITE_REGISTRY_ADDRESS` in `.env.local` and in your hosting environment (or remove it so `src/deployment.json` is used). Rebuild and commit.
+6. Optional source verification: upload `artifacts/AegisRegistry.v2.standard-input.json` in the explorer's "Verify contract → Standard JSON input" form (compiler `v0.8.38+commit.1835d247`, contract `AegisRegistry.sol:AegisRegistry`, constructor argument = ABI-encoded reviewer address).
+
+
 ## Existing shared deployment — use this first
 
 The registry is already deployed at `0x5eD536a9a2856109E4a02016ad2a99B3865e91F0`. The app uses this address by default. Open **Onchain platform**, click **Connect & switch to Arc Testnet**, then **Load shared registry**. You do not need to deploy again. To submit a report, fill in the suspected address and evidence, then sign the report transaction in MetaMask. The deployment steps below are for creating a separate registry.
@@ -19,8 +33,8 @@ Verified network configuration: chain ID 5042002; RPC https://rpc.testnet.arc.io
 
 1. Run `npm ci` and `npm run dev` in this folder.
 2. Open Onchain platform and connect your funded test wallet.
-3. Verify the reviewer field is `0xe558716de7B4af56A5cD472Ce323Ad5cb5F445Af`. This address will control report adjudication; the deployer may be a different wallet.
-4. Click Deploy registry with wallet. Review the chain, deployment and gas fee in MetaMask, then sign if correct.
+3. Verify the reviewer field (pre-filled from `src/deployment.json`, or `VITE_DEFAULT_REVIEWER`) is `0xe558716de7B4af56A5cD472Ce323Ad5cb5F445Af`. This address will control report adjudication; the deployer may be a different wallet.
+4. Expand **Deploy a new v2 registry** and click Deploy registry with wallet. Review the chain, deployment and gas fee in MetaMask, then sign if correct.
 5. Wait for confirmation. Copy the deployed registry address shown in the app and verify it on the explorer. Deployment does not transfer ownership of your wallet.
 6. Copy `.env.example` to `.env.local`. Set `VITE_REGISTRY_ADDRESS` to the deployed address. Restart the development server or rebuild the frontend. These are public frontend settings, never secrets.
 7. Use this one contract address across all clients. Do not deploy a new registry for every user.
@@ -45,7 +59,7 @@ Verified network configuration: chain ID 5042002; RPC https://rpc.testnet.arc.io
 | Dedicated RPC provider | Before public scale | Choose a provider from Arc's official network page; provision an endpoint and use `VITE_ARC_RPC_URL` only if it is intended to be browser-public and origin-restricted |
 | IPFS pinning | Future integration | https://docs.pinata.cloud/ ; evidence availability, requires server-side credentials and explicit publication consent |
 | Transaction simulation | Future integration | https://docs.tenderly.co/ ; verify Arc support and coverage before purchasing or configuring. No Tenderly integration exists in this code |
-| Indexer and durable database | Before production | Provision an indexer and managed PostgreSQL service to support complete registry history and authenticated incident storage; backend implementation still required |
+| Indexer and durable database | Before production | Use Arkiv Rabdi for public reports; see ARKIV_SETUP.md. Private incident storage remains separate |
 | Issuer coordination | External authorization required | Contact the relevant issuer through its official incident/legal process. No generic public API lets this app freeze third-party funds |
 
 The implemented wallet/contract path requires no Circle API key, WalletConnect project ID, IPFS key or hosted backend. Additional services above are integration requirements, not features activated merely by adding a key.
@@ -55,7 +69,7 @@ The implemented wallet/contract path requires no Circle API key, WalletConnect p
 1. Deploy the repository to a static Vite-capable host.
 2. Set the public `VITE_ARC_RPC_URL` and `VITE_REGISTRY_ADDRESS` environment values.
 3. Build command: `npm run build`. Output directory: `dist`.
-4. Enable HTTPS, an appropriate Content Security Policy and RPC origin restrictions. Rebuild whenever public configuration changes.
+4. Enable HTTPS. `public/_headers` (Netlify / Cloudflare Pages) and `vercel.json` (Vercel) already set a strict Content Security Policy, HSTS, `frame-ancestors 'none'`, nosniff and long-lived caching for hashed assets. If `VITE_ARC_RPC_URL` points elsewhere, add that origin to `connect-src` in both files. Restrict any dedicated RPC key to your site origin. Rebuild whenever public configuration changes.
 5. Smoke-test connection, rejection handling, submission receipts, shared reads and wrong-network behavior with dedicated test wallets.
 
 ## Deployment status
@@ -75,3 +89,5 @@ node scripts/deployment-check.mjs 0x2Df43B66A31cd93792E4a32Af494b5a18c614148 0xe
 ```
 
 The script requires no key and sends no transaction. If a deployment is submitted but confirmation is interrupted, check the transaction link on the explorer before attempting another deployment.
+
+For Arkiv public scam-address storage and Rabdi tGLM funding, follow [ARKIV_SETUP.md](ARKIV_SETUP.md).

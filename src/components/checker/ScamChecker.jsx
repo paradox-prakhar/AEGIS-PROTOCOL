@@ -8,6 +8,7 @@ import { Radar } from './Radar';
 import { Verdict } from './Verdict';
 import { checkContact, checkLink, checkMessage } from '../../lib/heuristics';
 import { screenAddress } from '../../lib/screen';
+import { lookupSubject } from '../../chain';
 import { isEvmAddress } from '../../lib/format';
 import { sampleAddress } from '../../risk';
 import { useRegistry } from '../../state/registry';
@@ -111,7 +112,22 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
     if (mode === 'message') res = fromHeuristics(checkMessage(v));
     if (mode === 'link') res = fromHeuristics(checkLink(v));
     if (mode === 'contact') res = fromHeuristics(checkContact(v));
-    if (mode === 'wallet') res = fromWallet(screenAddress(v, reg.rows, reg.available));
+    if (mode === 'wallet') {
+      // v2 registries index reports per address, so the whole history is checked;
+      // on v1 lookupSubject scans the latest 100. If the lookup fails, use the rows already loaded.
+      let rows = reg.rows;
+      let full = false;
+      let readOk = reg.available;
+      if (reg.address) {
+        try {
+          const found = await lookupSubject(reg.address, v);
+          rows = found.rows;
+          full = found.complete;
+          readOk = true;
+        } catch { /* keep the loaded rows */ }
+      }
+      res = fromWallet(screenAddress(v, rows, readOk, full));
+    }
     if (mode === 'screenshot') {
       try {
         setOcr({ progress: 0, text: '' });

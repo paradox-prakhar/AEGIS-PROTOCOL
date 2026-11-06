@@ -462,3 +462,47 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   .bento-cell.bento-wide { grid-column: auto; }
   .help-links { grid-template-columns: 1fr; }
 }
+
+/* ---------------------------------------------------------------------------
+   Legacy panels (src/Onchain.jsx, src/ArkivReports.jsx, merged from main).
+   Those components keep their original class names; this skin maps them onto
+   the Aegis tokens. Scoped to .legacy-panel so nothing else is affected.
+   --------------------------------------------------------------------------- */
+.legacy-panel .panel { background: linear-gradient(180deg, var(--surface), var(--bg-2)); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: clamp(18px, 3vw, 28px); box-shadow: var(--shadow); }
+.legacy-panel .panel.inset { margin-top: 24px; background: var(--surface-2); box-shadow: none; }
+.legacy-panel .panel.inset form { margin-top: 16px; }
+.legacy-panel h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 8px; color: var(--text); }
+.legacy-panel p { color: var(--text-2); line-height: 1.65; }
+.legacy-panel a { color: var(--accent); }
+.legacy-panel .twocol { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 24px; margin-top: 8px; }
+.legacy-panel label { display: block; font-size: 0.875rem; color: var(--text-2); margin: 16px 0; }
+.legacy-panel label input:not([type='checkbox']):not([type='file']), .legacy-panel label textarea, .legacy-panel label select { display: block; width: 100%; margin-top: 8px; }
+.legacy-panel textarea { min-height: 120px; resize: vertical; }
+.legacy-panel input[type='file'] { display: block; margin-top: 8px; max-width: 100%; color: var(--text-2); }
+.legacy-panel button.primary, .legacy-panel button.secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: var(--radius-pill); font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: filter var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast); margin: 6px 8px 6px 0; max-width: 100%; text-align: center; }
+.legacy-panel button.primary { background: linear-gradient(135deg, var(--accent), #5fb8ff); color: var(--accent-ink); }
+.legacy-panel button.secondary { background: var(--surface-2); border-color: var(--border-2); color: var(--text); }
+.legacy-panel button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.legacy-panel button.secondary:hover:not(:disabled) { background: var(--surface-3); }
+.legacy-panel button:disabled { opacity: 0.45; cursor: not-allowed; }
+.legacy-panel .info, .legacy-panel .notice, .legacy-panel .alert { padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--border-2); background: var(--info-soft); color: var(--text-2); margin: 14px 0; font-size: 0.9rem; line-height: 1.65; overflow-wrap: anywhere; }
+.legacy-panel .notice { background: var(--safe-soft); border-color: rgba(var(--safe-rgb), 0.35); color: var(--text); }
+.legacy-panel .alert { background: var(--danger-soft); border-color: rgba(var(--danger-rgb), 0.4); color: var(--text); }
+.legacy-panel .record { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.legacy-panel .record p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.legacy-panel .badge { display: inline-block; font-size: 0.75rem; border: 1px solid var(--border-2); border-radius: var(--radius-pill); padding: 4px 10px; color: var(--text-2); }
+.legacy-panel .mono { font-family: var(--mono); font-size: 0.82rem; overflow-wrap: anywhere; }
+.legacy-panel .toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 14px 0; }
+.legacy-panel .stats.compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 18px 0; }
+.legacy-panel .stats.compact article { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.legacy-panel .stats.compact article > div { color: var(--text-3); font-size: 0.8rem; }
+.legacy-panel .stats.compact strong { display: block; font-size: 1.5rem; margin-top: 6px; }
+.legacy-panel .stats.compact strong.small { font-size: 0.95rem; }
+.legacy-panel .stats.compact p { margin: 4px 0 0; font-size: 0.8rem; }
+.legacy-panel details.deploy { margin-top: 22px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.legacy-panel details summary { cursor: pointer; color: var(--accent); }
+.legacy-panel .tablewrap { overflow-x: auto; }
+.legacy-panel table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+.legacy-panel th { color: var(--text-3); font-size: 0.7rem; letter-spacing: 0.08em; }
+.legacy-panel td, .legacy-panel th { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+@media (max-width: 760px) { .legacy-panel .toolbar { flex-direction: column; align-items: stretch; } }

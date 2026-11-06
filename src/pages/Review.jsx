@@ -93,7 +93,7 @@ export default function Review({ params }) {
             {already ? (
               <Callout tone="success">Your connected wallet has already challenged this report.</Callout>
             ) : (
-              <form onSubmit={async (e) => { e.preventDefault(); after(await tx.run(reg.address, 'challenge', [BigInt(report.id), evidenceHash(evidence)]), 'Challenge confirmed.'); }}>
+              <form onSubmit={async (e) => { e.preventDefault(); after(await tx.run(reg.address, 'challenge', [BigInt(report.id), evidenceHash(evidence), '']), 'Challenge confirmed.'); }}>
                 <Field label="Counter-evidence" hint={evidence.length >= 20 ? `Hash ${evidenceHash(evidence).slice(0, 18)}…` : 'At least 20 characters. Export a copy before signing.'}>
                   <textarea rows={5} value={evidence} onChange={(e) => setEvidence(e.target.value)} placeholder="Explain why this allegation is wrong, with verifiable references…" />
                 </Field>

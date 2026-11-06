@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { activeRegistry, fetchRegistryMeta, fetchReports, friendlyError } from '../chain';
+import { READ_WINDOW, activeRegistry, fetchRegistryMeta, fetchReports, friendlyError } from '../chain';
 
 const RegistryContext = createContext(null);
 
@@ -16,9 +16,9 @@ export function RegistryProvider({ children }) {
     setLoading(true);
     setError('');
     try {
-      const [m, r] = await Promise.all([fetchRegistryMeta(target), fetchReports(target)]);
+      const [m, r] = await Promise.all([fetchRegistryMeta(target), fetchReports(target, { limit: READ_WINDOW })]);
       setMeta(m);
-      setRows(r);
+      setRows(r.rows);
       setUpdatedAt(Date.now());
     } catch (e) {
       setError(friendlyError(e));

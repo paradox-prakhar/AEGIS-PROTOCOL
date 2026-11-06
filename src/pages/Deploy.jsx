@@ -14,10 +14,10 @@ export default function Deploy() {
   const [reviewer, setReviewer] = useState(DEFAULT_REVIEWER);
   const [custom, setCustom] = useState(reg.address);
   const [tx, setTx] = useState({ stage: 'idle', hash: '', error: '' });
-  const busy = ['signing', 'pending'].includes(tx.stage);
+  const busy = ['simulating', 'pending'].includes(tx.stage);
 
   async function deploy() {
-    setTx({ stage: 'signing', hash: '', error: '' });
+    setTx({ stage: 'simulating', hash: '', error: '' });
     try {
       const addr = await deployRegistry(reviewer, (hash) => setTx({ stage: 'pending', hash, error: '' }));
       setTx((t) => ({ ...t, stage: 'confirmed' }));

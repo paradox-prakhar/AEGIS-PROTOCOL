@@ -56,7 +56,7 @@ export default function Report({ params = {} }) {
     e.preventDefault();
     setTouched(true);
     if (!valid || !backedUp) return;
-    const receipt = await tx.run(reg.address, 'submit', [form.subject, hash]);
+    const receipt = await tx.run(reg.address, 'submit', [form.subject, hash, '']);
     if (receipt) {
       setSaved([{ hash, text: pkgText, subject: form.subject, category: form.category, tx: receipt.hash, at: createdAt }, ...saved]);
       toast('Report confirmed on Arc Testnet.', 'success');

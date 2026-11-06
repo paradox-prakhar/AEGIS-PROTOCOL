@@ -136,8 +136,7 @@ export function PageHeader({ eyebrow, title, description, actions }) {
 }
 
 const STAGES = [
-  ['simulating', 'Simulate'],
-  ['signing', 'Sign'],
+  ['simulating', 'Check & sign'],
   ['pending', 'Confirm'],
   ['confirmed', 'Done'],
 ];
@@ -146,8 +145,7 @@ export function TxStatus({ tx }) {
   const idx = STAGES.findIndex(([s]) => s === tx.stage);
   const failed = tx.stage === 'failed';
   const label = {
-    simulating: 'Simulating with eth_call…',
-    signing: 'Waiting for your signature in the wallet…',
+    simulating: 'Checking the transaction, then waiting for your signature in the wallet…',
     pending: 'Submitted. Waiting for confirmation…',
     confirmed: 'Confirmed on Arc Testnet.',
     failed: tx.error,

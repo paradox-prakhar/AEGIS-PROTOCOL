@@ -4,7 +4,8 @@ import { scan, sampleAddress } from '../risk.js';
  * Combine the deterministic local policy with onchain registry rows.
  * Never returns a "safe" verdict: absence of reports is reported as "No record".
  */
-export function screenAddress(address, onchainRows, registryAvailable) {
+/** `fullHistory`: rows came from the registry's per-address index (v2), not just the latest window. */
+export function screenAddress(address, onchainRows, registryAvailable, fullHistory = false) {
   const local = scan(address, []);
   const lower = address.toLowerCase();
   const matches = (onchainRows || []).filter((r) => r.address.toLowerCase() === lower);
@@ -46,7 +47,7 @@ export function screenAddress(address, onchainRows, registryAvailable) {
     tone: 'neutral', level: 'No record', score: null, matches,
     reasons: [
       registryAvailable
-        ? 'No matching reports in the latest 100 registry records.'
+        ? (fullHistory ? 'No reports against this address in the full onchain history.' : 'No matching reports in the latest 100 registry records.')
         : 'The onchain registry could not be read, so only local fixtures were checked.',
       'This is not a safety verdict. Live threat feeds and transfer simulation are not connected.',
     ],

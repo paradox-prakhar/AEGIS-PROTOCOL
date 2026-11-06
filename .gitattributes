@@ -1,0 +1,8 @@
+*.sol text eol=lf
+*.json text eol=lf
+*.mjs text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+
+# Preserve the exact evidence bytes used by the review commitment.
+review/test-evidence.json -text
