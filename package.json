@@ -1,26 +1,33 @@
 {
   "name": "aegis-protocol",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "npm run contracts:compile && vite build",
-    "test": "node --test src/risk.test.js",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test src/risk.test.js src/arkiv-validation.test.js",
     "contracts:compile": "node scripts/compile.mjs",
-    "test:contracts": "node --test scripts/contracts.test.mjs"
+    "test:contracts": "node --test scripts/contracts.test.mjs",
+    "test:all": "npm test && npm run test:contracts",
+    "deploy:check": "node scripts/deployment-check.mjs",
+    "deploy:verify": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
-    "@arkiv-network/sdk": "^1.0.1",
     "ethers": "^6.17.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "@arkiv-network/sdk": "1.0.1",
     "viem": "^2.57.16"
   },
   "devDependencies": {
     "ganache": "^7.9.2",
-    "solc": "^0.8.38",
+    "solc": "0.8.38",
     "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

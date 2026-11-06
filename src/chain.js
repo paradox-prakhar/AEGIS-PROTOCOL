@@ -210,3 +210,6 @@ export async function deployRegistry(reviewer, onSubmitted = () => {}) {
   await contract.waitForDeployment();
   return contract.getAddress();
 }
+
+// Exposes the version-aware contract for cross-chain evidence verification.
+export async function arkivRegistry(address,write=false){return (await registry(address,write)).contract;}

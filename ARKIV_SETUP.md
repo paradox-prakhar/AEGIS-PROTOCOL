@@ -19,7 +19,7 @@ Official SDK/browser setup: https://docs.arkiv.network/start-here/clients/ . Cur
 
 ## Current verification and remaining production work
 
-The frontend builds, existing risk/contract tests pass, and the public Rabdi chain ID and wallet balance were checked. The wallet had zero tGLM at verification; an actual wallet-signed Arkiv create/read flow is not yet confirmed. A build alone does not prove the live write workflow.
+The frontend builds, existing risk/contract tests pass, and the public Rabdi chain ID and wallet balance were checked. The wallet was subsequently verified with 10 tGLM on Rabdi; an actual wallet-signed Arkiv create/read flow is not yet confirmed. A build alone does not prove the live write workflow.
 
 Recovery incidents remain browser-local because they can contain sensitive victim details. Issuer requests, staking, comprehensive threat simulation, complete-history scanning, retention automation and independent security review remain unfinished. Do not represent all application data as onchain: this release moves public scam report storage to Arkiv and retains Arc adjudication. Dependency advisories in development tooling also remain unresolved.
 

@@ -3,7 +3,8 @@ import {rabdi} from '@arkiv-network/sdk/chains';
 import {defineSchema,str,bytes} from '@arkiv-network/sdk/schema';
 import {eq,and,asc} from '@arkiv-network/sdk/query';
 import {http,custom,stringToBytes,hexToString} from 'viem';
-import {activeRegistry,registry,evidenceHash} from './chain';
+import {verifyReportBinding} from './arkiv-validation';
+import {activeRegistry,arkivRegistry as registry,sendRegistryTx,evidenceHash} from './chain';
 export const arkivChain=rabdi({accessKey:import.meta.env.VITE_ARKIV_ACCESS_KEY||''});
 export const Reports=defineSchema('aegis.arc.scam-reports.v1',{registry:str().indexed(),subject:str().indexed(),arcTx:str().indexed(),reportId:str(),hash:str(),evidence:bytes()});
 const client=createPublicClient({chain:arkivChain,transport:http(undefined,{timeout:15000,retryCount:1})});
@@ -28,14 +29,14 @@ export async function searchReports(subject='',offset=0){
  const c=await registry(activeRegistry());
  const rows=await Promise.all(page.entities.map(async row=>{
   try{const r=await c.reports(BigInt(row.reportId.value));const evidence=hexToString(row.evidence.value);
-   if(r.reporter.toLowerCase()!==row.$creator.toLowerCase()||r.subject.toLowerCase()!==row.subject.value||r.evidenceHash!==row.hash.value||evidenceHash(evidence)!==r.evidenceHash)throw Error('Unverified record');
+   verifyReportBinding(r,{creator:row.$creator,subject:row.subject.value,hash:row.hash.value,evidence});
    return {key:row.$key,address:r.subject,reportId:row.reportId.value,evidence,status:['Pending','Challenged','Confirmed','Rejected'][Number(r.status)]};
   }catch{return {key:row.$key,status:'Unverified — excluded from reputation',address:row.subject.value,evidence:''}}}));
  return {rows,next:offset+page.entities.length+page.skipped,more:page.entities.length+page.skipped===10};
 }
 export async function submitArcReport(subject,evidence){
- const c=await registry(activeRegistry(),true);const hash=evidenceHash(evidence);await c.submit.staticCall(subject,hash);
- const tx=await c.submit(subject,hash);const receipt=await tx.wait();if(receipt.status!==1)throw Error('Arc transaction reverted.');
+ const c=await registry(activeRegistry(),true);const hash=evidenceHash(evidence);
+ const receipt=await sendRegistryTx(activeRegistry(),'submit',[subject,hash,'']);if(receipt.status!==1)throw Error('Arc transaction reverted.');
  for(const log of receipt.logs){if(log.address.toLowerCase()!==activeRegistry().toLowerCase())continue;try{const event=c.interface.parseLog(log);if(event?.name==='Submitted')return {subject,evidence,reportId:event.args.id.toString(),arcTx:receipt.hash}}catch{}}
  throw Error('No report event found. Check your wallet transaction before retrying.');
 }
