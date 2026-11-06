@@ -1,72 +1,70 @@
 # Aegis Protocol
 
-A wallet-security and incident-response prototype inspired by Arc. Detect. Protect. Report. Recover.
+Wallet security and onchain evidence registry for Arc Testnet. This is a testnet application under development, not an audited production security service.
 
-## Run
+## Start
 
-Requires Node.js 20.19+.
+Use Node.js 22 LTS or newer.
 
 ```sh
 npm ci
 npm run dev
+```
+
+Open the local URL, select **Onchain platform**, and follow [SETUP.md](SETUP.md). The injected wallet integration supports MetaMask-compatible providers. No private key is needed by this app.
+
+## Implemented
+
+- Real injected wallet account access and Arc Testnet network switch/add.
+- Account/network change listeners clear stale wallet display state.
+- USDC gas balance display using native 18-decimal units.
+- Browser-wallet deployment of compiled registry bytecode with a chosen reviewer.
+- Signed report submission, evidence-hash challenges and reviewer resolution.
+- Transaction simulation through `eth_call` before registry writes, transaction links and receipt confirmation.
+- Shared onchain report reads; scanner consults the configured registry's latest 100 records.
+- Local incident forms, evidence records and JSON exports.
+- Deterministic local screening fixtures remain explicitly demo data.
+
+Transaction static calls check whether a registry operation would revert. They are not a token-transfer security simulation service.
+
+## Tests
+
+```sh
 npm test
+npm run contracts:compile
+npm run test:contracts
 npm run build
 ```
 
-Open the local Vite URL printed in the terminal. Production assets are generated in `dist/` and can be served by a static host.
-
-## Working features
-
-- Responsive dark protection dashboard and five task-focused workspace views.
-- Injected Ethereum wallet connection (account access only; never requests transfers).
-- Address validation and deterministic, explainable screening.
-- Explicit demo threat fixture: `0x1111111111111111111111111111111111111111`.
-- Local evidence reports, registry search, recovery incident capture and JSON export.
-- Browser-local persistence with storage error handling.
-- Unit tests covering invalid input, demo detection, unknown outcomes and unverified reports.
-- Solidity registry source with challenge events, a two-day review window and reviewer-only resolution.
-
-## Honest demo boundaries
-
-This is a runnable prototype, not a finished production security service. Data lives in this browser, not a shared database. Wallet connection does not enforce or switch networks. The Arc label is the intended target, not a verified deployment. No transactions are intercepted or simulated. No live intelligence, IPFS upload, USDC staking, issuer API or fund tracing is connected. The contract is not deployed, audited or wired into the UI; no contract test suite is included yet. There is no guarantee of safety or recovery. Unknown addresses are never labeled safe. The seeded address is a synthetic demo fixture, not an accusation against an actual owner.
+The contract test deploys to an ephemeral Ganache chain and checks submission validation, reviewer access, review delay, duplicate challenges, resolution and closed-report protections. Ganache may fall back to its JS implementation on newer Node versions. The fallback still executes the tests. Testnet wallet interaction and browser layout have not been automated or visually verified in this environment.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  UI[React workspace] --> Risk[Pure risk engine]
-  UI --> Evidence[Browser local evidence repository]
-  Evidence --> Export[Portable JSON evidence package]
-  UI --> Wallet[Injected wallet: account access only]
-  Contract[Solidity registry foundation] -. integration pending .-> UI
+  UI[React workspace] --> Wallet[Injected wallet / Ethers]
+  Wallet --> Registry[Arc Testnet registry]
+  UI --> RPC[Arc JSON RPC]
+  RPC --> Registry
+  UI --> Local[Browser-local incident evidence]
+  Local --> Export[JSON export]
 ```
 
-`src/main.jsx` owns workspace interactions, `src/risk.js` isolates screening policy, and `contracts/AegisRegistry.sol` defines the registry lifecycle. Styling is centralized in `src/style.css`.
+- `src/chain.js`: chain configuration, wallet connection, contract reads and deployment.
+- `src/Onchain.jsx`: wallet and onchain lifecycle interface.
+- `src/risk.js`: local screening policy.
+- `contracts/AegisRegistry.sol`: report, challenge and trusted-reviewer adjudication.
+- `scripts/compile.mjs`: Solidity compilation and frontend ABI/bytecode generation.
+- `scripts/contracts.test.mjs`: local EVM lifecycle tests.
 
-The initial frontend uses React/Vite to provide a reproducible standalone demo. The larger Next.js/Express/PostgreSQL/Prisma/Redis stack from the brief is not implemented. Production migration should separate feature components and introduce a durable authenticated API before shared reporting.
+## Trust and remaining production work
 
-## Production integration sequence
+Registry reports are public allegations, not automatic proof of fraud. The immutable reviewer can confirm or reject after a two-day review period; this is trusted adjudication, not decentralized governance. Challenges are public hashes, with no economic staking yet. Evidence text is not published by this app, so preserve exact copies independently. Never put private keys, seed phrases or sensitive victim information into evidence.
 
-1. Add wallet nonce authentication, durable PostgreSQL storage, authorization, request size limits and rate limits.
-2. Add evidence content hashing and opt-in IPFS publication; warn that public evidence cannot be recalled.
-3. Implement and test staking with a vetted token library. Keep Arc native gas units separate from ERC-20 USDC units.
-4. Review and test contract invariants, access control, dispute handling and economic abuse. Replace the trusted reviewer with documented governance; this prototype is not decentralized adjudication.
-5. Deploy reviewed contracts using a funded testnet wallet and publish verified addresses. Never put private keys in the client.
-6. Integrate chain indexing and simulation. Treat unavailable upstream data as unknown, not safe.
-7. Add authorized issuer coordination and distinguish draft, submitted, acknowledged and resolved states using actual provider responses.
+Shared reads currently show the latest 100 reports; the scanner cannot assert the absence of older reports. A production deployment needs a paginated indexer with finality/reorg handling, comprehensive threat intelligence and token-transfer simulation. Unavailable reads produce an error rather than a safe verdict.
 
-## Privacy and security
+Recovery incidents remain browser-local. IPFS storage, authenticated durable incident storage, fund tracing, USDC staking and authorized issuer coordination are not implemented. Only authorized issuers can freeze eligible funds. Recovery is never guaranteed.
 
-Evidence can contain sensitive information and is readable by anyone with access to the same browser profile. Do not paste secrets, seed phrases or private keys. No analytics or external data uploads are built in. JSON exports contain user-submitted allegations and explicitly indicate that no issuer request has been sent. Only authorized issuers can freeze eligible assets.
+Before mainnet use: independent contract audit, broader adversarial/invariant testing, reviewed governance and reviewer key rotation design, abuse controls, durable encrypted evidence storage, monitoring, incident runbooks, dependency remediation and a professional security review. Keep this deployment on testnet until these are complete.
 
-## Demo walkthrough
-
-1. Open Overview and choose Try a demo threat.
-2. Screen any other syntactically valid address to see an Unknown result.
-3. Add a report with at least 20 characters of supporting context.
-4. Search its address in Threat registry; it remains Under review.
-5. Open a recovery incident with a valid transaction hash and export its evidence.
-
-## Reference
-
-Arc network identifiers should be verified against Circle's maintained integration documentation before deployment: https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md
+Dependency review: npm audit reported advisories in the Ganache test-tool dependency tree, including high/critical findings. Ganache is a development dependency and is not imported into the browser bundle, but these findings still require remediation or replacement of the local EVM tooling before treating the repository as production hardened. Do not expose Ganache as a public service.
