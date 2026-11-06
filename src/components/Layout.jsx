@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BookOpen, ChevronDown, Copy, ExternalLink, FileWarning, Gavel, LayoutDashboard, LifeBuoy, LogOut,
-  Menu, Rocket, ScanLine, Shield, Database, Wallet, X, AlertTriangle, Droplets,
+  Menu, Rocket, ScanLine, Shield, Database, Wallet, X, AlertTriangle, Droplets, GraduationCap, ListChecks, Phone, HeartHandshake,
 } from 'lucide-react';
+import { SpotlightNavbar } from './vengeance/spotlight-navbar';
+import { ScrollProgress } from './motion';
 import { CHAIN_NAME, FAUCET, explorerAddress } from '../chain';
 import { useWallet } from '../state/wallet';
 import { useRegistry } from '../state/registry';
@@ -11,20 +13,30 @@ import { formatUsdc, shortAddress } from '../lib/format';
 import { Button } from './ui';
 
 export const NAV = [
-  { group: 'Protect', items: [
-    ['overview', 'Overview', LayoutDashboard],
-    ['scanner', 'Address scanner', ScanLine],
-    ['registry', 'Threat registry', Database],
+  { group: 'Stay safe', items: [
+    ['overview', 'Home', LayoutDashboard],
+    ['scanner', 'Scam checker', ScanLine],
+    ['learn', 'Learn scam types', GraduationCap],
   ] },
-  { group: 'Act', items: [
+  { group: 'Get help', items: [
+    ['recovery', "I've been scammed", LifeBuoy],
+    ['cases', 'My cases', ListChecks],
+    ['help', 'Helplines & resources', Phone],
+  ] },
+  { group: 'Community registry', items: [
+    ['registry', 'Threat registry', Database],
     ['report', 'Submit report', FileWarning],
     ['review', 'Challenge & review', Gavel],
-    ['recovery', 'Recovery center', LifeBuoy],
   ] },
   { group: 'Operate', items: [
     ['deploy', 'Deploy registry', Rocket],
     ['about', 'Trust & architecture', BookOpen],
   ] },
+];
+
+/** Routes shown in the floating desktop nav (the drawer holds everything). */
+export const PRIMARY = [
+  ['overview', 'Home'], ['scanner', 'Scam checker'], ['recovery', 'Get help'], ['cases', 'My cases'], ['learn', 'Learn'], ['help', 'Resources'],
 ];
 
 export const TITLES = Object.fromEntries(NAV.flatMap((g) => g.items.map(([k, t]) => [k, t])));
@@ -35,7 +47,7 @@ function Sidebar({ path, open, onClose }) {
   return (
     <>
       <div className={`scrim ${open ? 'show' : ''}`} onClick={onClose} />
-      <aside className={`sidebar ${open ? 'open' : ''}`}>
+      <aside className={`sidebar ${open ? 'open' : ''}`} id="site-menu" aria-label="All pages" aria-hidden={!open} inert={!open}>
         <div className="sidebar-top">
           <a className="brand" href="#/overview" onClick={onClose}>
             <span className="brand-mark"><Shield size={20} /></span>
@@ -131,25 +143,57 @@ export function Layout({ path, children }) {
   const w = useWallet();
   const toast = useToast();
   useEffect(() => { if (w.error) { toast(w.error, 'error'); w.clearError(); } }, [w.error]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!menu) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setMenu(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menu]);
+  const primaryIndex = PRIMARY.findIndex(([k]) => k === path);
   return (
     <div className="shell">
+      <a className="skip-link" href="#main">Skip to content</a>
+      <ScrollProgress />
       <Sidebar path={path} open={menu} onClose={() => setMenu(false)} />
       <div className="main">
-        <header className="topbar">
-          <button className="icon-btn menu-btn" aria-label="Open menu" onClick={() => setMenu(true)}><Menu size={20} /></button>
-          <div className="crumbs"><span>Aegis</span><span className="sep">/</span><b>{TITLES[path] || 'Not found'}</b></div>
-          <WalletMenu />
+        <header className="topbar floatnav">
+          <a className="brand" href="#/overview" aria-label="Aegis Protocol home">
+            <span className="brand-mark"><Shield size={18} /></span>
+            <span className="brand-text">Aegis<small>Protocol</small></span>
+          </a>
+          <SpotlightNavbar
+            className="floatnav-links"
+            items={PRIMARY.map(([k, label]) => ({ label, href: `#/${k}` }))}
+            activeIndex={primaryIndex === -1 ? null : primaryIndex}
+            defaultActiveIndex={-1}
+          />
+          <div className="floatnav-end">
+            {path !== 'recovery' && (
+              <a className="btn btn-calm btn-sm help-now" href="#/recovery"><HeartHandshake size={15} /><span>I&apos;ve been scammed</span></a>
+            )}
+            <WalletMenu />
+            <button className="icon-btn menu-btn" aria-label="Open all pages" aria-expanded={menu} aria-controls="site-menu" onClick={() => setMenu(true)}><Menu size={20} /></button>
+          </div>
         </header>
         {w.wrongNetwork && (
-          <div className="netbanner">
+          <div className="netbanner" role="status">
             <AlertTriangle size={16} />Your wallet is on another network. Aegis only works on Arc Testnet.
             <button onClick={w.switchNetwork}>Switch network</button>
           </div>
         )}
-        <main className="content">{children}</main>
+        <main className="content" id="main" tabIndex={-1}>{children}</main>
         <footer className="footer">
-          <span><Shield size={13} /> Aegis Protocol · Arc Testnet prototype</span>
-          <span>Reports are public allegations, not proof. Never share seed phrases or private keys.</span>
+          <div className="footer-brand">
+            <span className="brand-mark"><Shield size={16} /></span>
+            <div>
+              <b>Aegis Protocol</b>
+              <p>Calm, clear help before and after a scam. Arc Testnet prototype · not audited.</p>
+            </div>
+          </div>
+          <nav className="footer-links" aria-label="Footer">
+            {NAV.slice(0, 2).flatMap((g) => g.items).map(([k, label]) => <a key={k} href={`#/${k}`}>{label}</a>)}
+          </nav>
+          <p className="footer-note">Aegis will never ask for your OTP, PIN, password or seed phrase. Reports are public allegations, not proof.</p>
         </footer>
       </div>
     </div>

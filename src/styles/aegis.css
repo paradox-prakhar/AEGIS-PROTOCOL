@@ -97,3 +97,59 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 
 /* ---------- Scroll progress ---------- */
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; transform-origin: 0 50%; z-index: 90; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+/* ---------- Motion helpers ---------- */
+.split-line { display: block; }
+.scramble { position: relative; display: inline-grid; }
+.scramble > .scramble-ghost, .scramble > .scramble-live { grid-area: 1 / 1; }
+.scramble-ghost { visibility: hidden; }
+.page { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+
+/* ---------- Shell: floating nav + drawer ---------- */
+.main { margin-left: 0 !important; }
+.content { max-width: var(--content-max); padding: 28px 32px 32px; gap: 28px; }
+.topbar.floatnav {
+  position: sticky; top: 12px; z-index: 50; margin: 12px auto 0; width: calc(100% - 32px); max-width: var(--content-max);
+  height: var(--nav-h); padding: 0 10px 0 16px; display: flex; align-items: center; gap: 16px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: rgba(8, 10, 16, 0.72); backdrop-filter: blur(var(--blur-lg)) saturate(150%); -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(150%);
+  box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.9);
+}
+.floatnav .brand-mark { width: 34px; height: 34px; border-radius: 11px; }
+.floatnav .brand-text { font-size: 16px; }
+.floatnav-links { flex: 1; padding-top: 0 !important; }
+.floatnav nav, .spotlight-nav { flex: none; overflow: hidden; }
+.spotlight-nav { --spotlight-color: rgba(var(--accent-rgb), 0.18); --ambience-color: var(--accent); background: rgba(255, 255, 255, 0.025); border: 1px solid var(--border); }
+.spotlight-nav a { font-size: 14px; color: var(--text-2) !important; white-space: nowrap; }
+.spotlight-nav a[aria-current='page'], .spotlight-nav a:hover { color: var(--text) !important; }
+.floatnav-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.floatnav .menu-btn { display: inline-grid !important; }
+.wallet-chip { border-radius: var(--radius-pill); background: rgba(255,255,255,0.03); }
+
+.sidebar { transform: translateX(-100%); transition: transform var(--dur) var(--ease-out); box-shadow: 30px 0 60px rgba(0, 0, 0, 0.6); z-index: 80; background: rgba(8, 10, 16, 0.94); }
+.sidebar.open { transform: none; }
+.sidebar-top .sidebar-close { display: inline-grid !important; }
+.scrim { z-index: 75 !important; }
+.nav-item { min-height: 44px; border-radius: 12px; }
+
+.netbanner { margin: 12px auto 0; width: calc(100% - 32px); max-width: var(--content-max); border-radius: var(--radius); }
+
+/* Footer */
+.footer { display: grid; grid-template-columns: 1.2fr 2fr; gap: 20px 40px; max-width: var(--content-max); padding: 36px 32px 40px; margin-top: 24px; border-top: 1px solid var(--border); font-size: 14px; }
+.footer-brand { display: flex; gap: 12px; align-items: flex-start; }
+.footer-brand .brand-mark { width: 30px; height: 30px; flex-shrink: 0; }
+.footer-brand b { color: var(--text); }
+.footer-brand p { margin-top: 4px; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 6px 22px; align-content: flex-start; flex: none; overflow: visible; }
+.footer-links a { color: var(--text-2); padding: 6px 0; background-image: linear-gradient(var(--accent), var(--accent)); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size var(--dur) var(--ease-out), color var(--dur-fast); }
+.footer-links a:hover, .footer-links a:focus-visible { color: var(--text); background-size: 100% 1px; }
+.footer-note { grid-column: 1 / -1; font-size: 13px; color: var(--text-3); }
+
+@media (max-width: 1100px) { .floatnav-links { display: none !important; } }
+@media (max-width: 720px) {
+  .help-now span { display: none; }
+  .floatnav .brand-text small { display: none; }
+  .content { padding: 20px 16px 28px; }
+  .footer { grid-template-columns: 1fr; padding: 28px 16px 32px; }
+  .topbar.floatnav { width: calc(100% - 16px); top: 8px; margin-top: 8px; gap: 8px; }
+}
