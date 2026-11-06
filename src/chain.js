@@ -1,9 +1,10 @@
 import {BrowserProvider,Contract,ContractFactory,JsonRpcProvider,isAddress,keccak256,toUtf8Bytes} from 'ethers';
 import artifact from './registry-artifact.json';
+import deployment from './deployment.json';
 export const CHAIN_ID=5042002;
 export const RPC=import.meta.env.VITE_ARC_RPC_URL||'https://rpc.testnet.arc.io';
 export const EXPLORER='https://explorer.testnet.arc.io';
-export const configuredRegistry=import.meta.env.VITE_REGISTRY_ADDRESS||'';
+export const configuredRegistry=import.meta.env.VITE_REGISTRY_ADDRESS||deployment.registryAddress||'';
 export const expectedDeployer=import.meta.env.VITE_DEPLOYER_ADDRESS||'';
 export function activeRegistry(){
  if(configuredRegistry)return configuredRegistry;

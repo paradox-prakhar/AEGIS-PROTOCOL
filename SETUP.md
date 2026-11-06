@@ -1,5 +1,11 @@
 # Arc Testnet setup and deployment
 
+## Existing shared deployment — use this first
+
+The registry is already deployed at `0x5eD536a9a2856109E4a02016ad2a99B3865e91F0`. The app uses this address by default. Open **Onchain platform**, click **Connect & switch to Arc Testnet**, then **Load shared registry**. You do not need to deploy again. To submit a report, fill in the suspected address and evidence, then sign the report transaction in MetaMask. The deployment steps below are for creating a separate registry.
+
+Deployment transaction: https://explorer.testnet.arc.io/tx/0x412009386d92830e4ecc3bf173531f8f1e8ad15b02ef0c5a84ec6259ca429047 . Actual deployment fee: 0.014171725 test USDC.
+
 ## 1. Wallet and free test tokens
 
 1. Install MetaMask from https://metamask.io/download/ and create a dedicated test wallet. Keep its recovery phrase offline. Do not send a private key to this chat.
@@ -54,7 +60,7 @@ The implemented wallet/contract path requires no Circle API key, WalletConnect p
 
 ## Deployment status
 
-No live contract address is recorded yet. The user's wallet must fund and sign deployment. Local EVM tests and a compiled frontend do not prove testnet deployment or production readiness.
+The shared Arc Testnet registry is live. Its receipt, creation bytecode, constructor reviewer and deployed reviewer were verified against this repository. Deployment metadata is in `src/deployment.json`. This verification is not a security audit or a production-readiness certification.
 
 ## Funded deployment wallet
 

@@ -2,6 +2,10 @@
 
 Wallet security and onchain evidence registry for Arc Testnet. This is a testnet application under development, not an audited production security service.
 
+## Verified Arc Testnet deployment
+
+Registry: `0x5eD536a9a2856109E4a02016ad2a99B3865e91F0`. The frontend uses this shared registry by default. Deployment metadata is recorded in `src/deployment.json`; `VITE_REGISTRY_ADDRESS` can override it. Creation bytecode and constructor arguments were checked against the confirmed transaction. This is not an explorer source-code verification or independent audit.
+
 ## Start
 
 Use Node.js 22 LTS or newer.
