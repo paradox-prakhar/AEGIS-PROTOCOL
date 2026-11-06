@@ -117,8 +117,9 @@ Stack (unchanged): Vite 6 + React 19 + JSX + plain CSS. The upgrade adds:
 |---|---|
 | `tailwindcss` 4 + `@tailwindcss/vite` | Required by Vengeance UI components. Preflight is **not** loaded, so existing CSS keeps control of base styles. |
 | `framer-motion` | Motion base for all animation (Vengeance components import it). |
+| `@fontsource-variable/space-grotesk`, `@fontsource-variable/geist-mono` | Self-hosted fonts (bundled by Vite), so no Google Fonts request is needed under the CSP. |
 | `clsx`, `tailwind-merge` | The `cn()` helper shadcn components expect (`src/lib/utils.js`). |
-| `tesseract.js` | Reads text from screenshots **in the browser**. Lazy-loaded only when a screenshot is checked; it downloads its OCR engine and English data from a CDN on first use. |
+| `tesseract.js` + `@tesseract.js-data/eng` | Reads text from screenshots **in the browser**. Lazy-loaded only when a screenshot is checked. The worker, engine and English data are copied to `public/ocr/` by `scripts/copy-ocr-assets.mjs` (runs before `dev` and `build`) and served from the site itself, never a CDN. |
 
 GSAP and Lenis were deliberately not added: nothing needs GSAP, and smooth-scroll hijacking hurts older users and screen-reader users.
 
@@ -160,7 +161,7 @@ Custom pieces (no source offers them): the cursor system, radar sweep, scramble 
 ### Customization guide
 
 - **Colours, radii, glow, spacing, easing:** edit `src/styles/tokens.css`. Tailwind sees the same values through `@theme` in `src/styles/tailwind.css` (`bg-surface`, `text-safe`, `rounded-lg`…).
-- **Fonts:** `--font` / `--mono` in tokens, plus the Google Fonts link in `index.html`.
+- **Fonts:** `--font` / `--mono` in tokens, plus the `@fontsource-variable/*` imports in `src/main.jsx`.
 - **Motion feel:** `src/motion/config.js` (for example, slow everything down by raising `duration.*`).
 - **Scam rules:** `src/lib/heuristics.js`. Add a test in `src/heuristics.test.js` for every new rule.
 - **Scam types (Education hub):** the `TYPES` array in `src/pages/Learn.jsx`.
@@ -171,4 +172,5 @@ Custom pieces (no source offers them): the cursor system, radar sweep, scramble 
 
 - Lighthouse scores and a screen-reader pass have not been measured in this environment. Keyboard navigation, focus states and 375px layouts were checked manually.
 - The Anatomy figure is a static "Figure"-tier drawing. Anatomy's geometry audit and line-end checks (which need headless Chrome tooling) were not run.
+- **Screenshot checking needs `'wasm-unsafe-eval'` in `script-src`.** The text reader is WebAssembly, and the CSP in `vercel.json` / `public/_headers` doesn't allow compiling it yet. Until then the Screenshot tab tells people to paste the text instead; everything else works under the current CSP.
 - The public Arc RPC sometimes rate-limits registry reads (HTTP 429). The UI then shows the registry as unavailable rather than any safe verdict.

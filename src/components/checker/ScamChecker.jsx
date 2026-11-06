@@ -56,7 +56,7 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
   const reduce = useReducedMotion();
   const [mode, setMode] = useState(initialMode);
   const [values, setValues] = useState({ [initialMode]: initialValue });
-  const [image, setImage] = useState(null); // { file, url }
+  const [image, setImage] = useState(null); // { file, url } — url is a data: URL (the hosting CSP allows data: images, not blob:)
   const [phase, setPhase] = useState('idle'); // idle | scanning | done
   const [step, setStep] = useState(0);
   const [ocr, setOcr] = useState(null); // { progress, text }
@@ -67,7 +67,6 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
   const cfg = MODES.find((m) => m.key === mode);
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); cursor.setMode(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => () => { if (image) URL.revokeObjectURL(image.url); }, [image]);
 
   const value = values[mode] || '';
   const setValue = (v) => setValues((s) => ({ ...s, [mode]: v }));
@@ -131,13 +130,41 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
     if (mode === 'screenshot') {
       try {
         setOcr({ progress: 0, text: '' });
+        // The reader is WebAssembly. If the site's CSP doesn't allow compiling it
+        // ('wasm-unsafe-eval'), say so immediately rather than failing inside the worker.
+        try {
+          await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+        } catch {
+          setPhase('idle'); cursor.setMode(null);
+          setError('Reading screenshots isn’t available on this site right now. Please type or paste the message text in the Message tab instead.');
+          return;
+        }
         // Lazy-loaded: text recognition runs entirely in this browser.
         const { createWorker } = await import('tesseract.js');
-        const worker = await createWorker('eng', 1, {
+        // Served from this site (public/ocr), not a CDN: the hosting CSP only allows same-origin.
+        const ocrBase = new URL(`${import.meta.env.BASE_URL}ocr/`, window.location.href).href;
+        // If the engine can't start (e.g. blocked by a CSP) the worker reports through errorHandler
+        // and never resolves, so fail visibly instead of waiting forever.
+        let fail;
+        const failed = new Promise((_, reject) => { fail = reject; });
+        failed.catch(() => {}); // only observed through the races below
+        const timer = setTimeout(() => fail(new Error('OCR timed out')), 90000);
+        const workerReady = createWorker('eng', 1, {
+          workerPath: `${ocrBase}worker.min.js`,
+          corePath: `${ocrBase}core`,
+          langPath: `${ocrBase}lang`,
+          workerBlobURL: false,
+          errorHandler: (err) => fail(err),
           logger: (m) => { if (m.status === 'recognizing text') setOcr((o) => ({ ...o, progress: m.progress })); },
         });
-        const { data } = await worker.recognize(image.file);
-        await worker.terminate();
+        let data;
+        try {
+          const worker = await Promise.race([failed, workerReady]);
+          ({ data } = await Promise.race([failed, worker.recognize(image.file)]));
+        } finally {
+          clearTimeout(timer);
+          workerReady.then((w) => w.terminate()).catch(() => {});
+        }
         const text = data.text.trim();
         setOcr({ progress: 1, text });
         res = text.length < 8
@@ -155,9 +182,11 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
   function pickImage(file) {
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('Please choose an image file (PNG or JPG).'); return; }
-    if (image) URL.revokeObjectURL(image.url);
-    setImage({ file, url: URL.createObjectURL(file) });
-    setError('');
+    if (file.size > 15 * 1024 * 1024) { setError('That image is too large. Please choose one under 15 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setImage({ file, url: String(reader.result) }); setError(''); };
+    reader.onerror = () => setError('Could not open that image. Please try another one.');
+    reader.readAsDataURL(file);
   }
 
   const busy = phase === 'scanning';

@@ -75,8 +75,8 @@
   --dur-slow: 600ms;
 
   /* Type */
-  --font: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font: 'Space Grotesk Variable', 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --text-base: 16px;
 
   /* Layout */

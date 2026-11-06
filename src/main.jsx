@@ -4,6 +4,8 @@ import App from './App';
 import { WalletProvider } from './state/wallet';
 import { RegistryProvider } from './state/registry';
 import { ToastProvider } from './state/toast';
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/geist-mono';
 import './styles/tokens.css';
 import './style.css';
 import './styles/tailwind.css';
