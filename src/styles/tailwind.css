@@ -7,8 +7,8 @@
 
 @source "../";
 
-/* The app is dark-only; Vengeance components use `dark:` variants, so map
-   them to the `.dark` class set on <html>. */
+/* The app is light-only. `dark:` variants stay mapped to a `.dark` class that
+   is never set, so Vengeance components render their light styles. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
