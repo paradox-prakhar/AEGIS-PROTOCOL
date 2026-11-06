@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Compile contracts and check artifacts are committed
+        run: |
+          npm run contracts:compile
+          git diff --exit-code -- src/registry-artifact.json src/registry-v1-artifact.json artifacts/
+      - run: npm test
+      - run: npm run test:contracts
+      - run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

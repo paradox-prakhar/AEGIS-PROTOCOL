@@ -1,5 +1,6 @@
 {
   "chainId": 5042002,
+  "version": 1,
   "registryAddress": "0x5eD536a9a2856109E4a02016ad2a99B3865e91F0",
   "transactionHash": "0x412009386d92830e4ecc3bf173531f8f1e8ad15b02ef0c5a84ec6259ca429047",
   "deployer": "0x2Df43B66A31cd93792E4a32Af494b5a18c614148",
