@@ -55,3 +55,17 @@ The implemented wallet/contract path requires no Circle API key, WalletConnect p
 ## Deployment status
 
 No live contract address is recorded yet. The user's wallet must fund and sign deployment. Local EVM tests and a compiled frontend do not prove testnet deployment or production readiness.
+
+## Funded deployment wallet
+
+The selected deployer is `0x2Df43B66A31cd93792E4a32Af494b5a18c614148`; the reviewer remains `0xe558716de7B4af56A5cD472Ce323Ad5cb5F445Af`. These roles may use different wallets. The reviewer also needs test USDC for the gas on adjudication transactions.
+
+Set `VITE_DEPLOYER_ADDRESS` in `.env.local` to restrict the deployment button to the intended funded wallet. The app immediately displays a deployment transaction link and saves a confirmed registry address in this browser. The local scanner uses that address until `VITE_REGISTRY_ADDRESS` is configured. For all other users and hosted environments, configure the shared registry address explicitly.
+
+Run a read-only gas/balance check before deploying:
+
+```sh
+node scripts/deployment-check.mjs 0x2Df43B66A31cd93792E4a32Af494b5a18c614148 0xe558716de7B4af56A5cD472Ce323Ad5cb5F445Af
+```
+
+The script requires no key and sends no transaction. If a deployment is submitted but confirmation is interrupted, check the transaction link on the explorer before attempting another deployment.
