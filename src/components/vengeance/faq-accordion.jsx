@@ -1,4 +1,4 @@
-"use client";;
+/* Vengeance UI — faq-accordion (MIT, © Ashutoshx7). Installed via shadcn CLI (JSX output). */
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 

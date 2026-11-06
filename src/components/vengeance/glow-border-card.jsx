@@ -1,4 +1,4 @@
-'use client';;
+/* Vengeance UI — glow-border-card (MIT, © Ashutoshx7). Installed via shadcn CLI (JSX output). */
 import React from 'react';
 import { cn } from '@/lib/utils';
 

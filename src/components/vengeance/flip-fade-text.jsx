@@ -1,3 +1,4 @@
+/* Vengeance UI — flip-fade-text (MIT, © Ashutoshx7). Installed via shadcn CLI (JSX output). */
 import { useEffect, useState, useMemo, useCallback, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"

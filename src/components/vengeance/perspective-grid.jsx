@@ -1,4 +1,4 @@
-"use client";;
+/* Vengeance UI — perspective-grid (MIT, © Ashutoshx7). Installed via shadcn CLI (JSX output). */
 import React, { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 

@@ -1,3 +1,4 @@
+/* Vengeance UI — staggerText (MIT, © Ashutoshx7). Installed via shadcn CLI (JSX output). */
 import React from "react";
 import { motion } from 'framer-motion'
 
