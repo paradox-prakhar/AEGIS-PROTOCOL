@@ -12,7 +12,10 @@ export function activeRegistry(){
 export async function connectWallet(){
  if(!window.ethereum)throw Error('Install MetaMask or an injected EVM wallet.');
  await window.ethereum.request({method:'eth_requestAccounts'});
- try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x4cef52'}]})}catch(e){if(e.code!==4902)throw e;await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x4cef52',chainName:'Arc Testnet',nativeCurrency:{name:'USDC',symbol:'USDC',decimals:18},rpcUrls:[RPC],blockExplorerUrls:[EXPLORER]}]});}
+ const currentChain=await window.ethereum.request({method:'eth_chainId'});
+ if(BigInt(currentChain)!==BigInt(CHAIN_ID)){
+  try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x4cef52'}]})}catch(e){if(e.code!==4902)throw e;await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x4cef52',chainName:'Arc Testnet',nativeCurrency:{name:'USDC',symbol:'USDC',decimals:18},rpcUrls:[RPC],blockExplorerUrls:[EXPLORER]}]});}
+ }
  const provider=new BrowserProvider(window.ethereum);if((await provider.getNetwork()).chainId!==BigInt(CHAIN_ID))throw Error('Switch wallet to Arc Testnet.');return provider.getSigner();
 }
 export async function registry(address,write=false){
