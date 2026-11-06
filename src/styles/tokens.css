@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Aegis design tokens — single source of truth.
+   Plain CSS variables (used by style.css / aegis.css) and exposed to Tailwind
+   via @theme in tailwind.css, so `bg-surface`, `text-safe`, `rounded-lg` etc.
+   resolve to the same values.
+   ========================================================================== */
+:root {
+  /* Base */
+  --bg: #05060a;
+  --bg-2: #080a10;
+  --surface: rgba(14, 18, 27, 0.72);      /* glass panel */
+  --surface-solid: #0d1119;
+  --surface-2: rgba(22, 28, 40, 0.78);
+  --surface-3: #1b2232;
+  --border: rgba(148, 170, 200, 0.12);     /* thin 1px glass edge */
+  --border-2: rgba(148, 170, 200, 0.2);
+
+  /* Text — all ≥ 4.5:1 on --bg (AA) */
+  --text: #eef3f8;
+  --text-2: #b4c0cf;
+  --text-3: #8592a4;
+
+  /* Brand: teal = trust (primary), violet = secondary */
+  --accent: #2de2e6;
+  --accent-rgb: 45, 226, 230;
+  --accent-2: #8b7cff;
+  --accent-2-rgb: 139, 124, 255;
+  --accent-ink: #021a1b;
+  --accent-soft: rgba(45, 226, 230, 0.1);
+
+  /* Semantic status — used consistently: safe / suspicious / danger */
+  --safe: #34d399;
+  --safe-rgb: 52, 211, 153;
+  --safe-soft: rgba(52, 211, 153, 0.1);
+  --warning: #fbbf24;
+  --warning-rgb: 251, 191, 36;
+  --warning-soft: rgba(251, 191, 36, 0.1);
+  --danger: #f87171;
+  --danger-rgb: 248, 113, 113;
+  --danger-soft: rgba(248, 113, 113, 0.1);
+  --info: #7cb6ff;
+  --info-soft: rgba(124, 182, 255, 0.1);
+  --neutral-soft: rgba(180, 192, 207, 0.08);
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* Glass, glow, shadow */
+  --blur: 14px;
+  --blur-lg: 24px;
+  --glow: 0 0 0 1px rgba(var(--accent-rgb), 0.18), 0 8px 40px -12px rgba(var(--accent-rgb), 0.45);
+  --glow-soft: 0 0 40px -10px rgba(var(--accent-rgb), 0.35);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+
+  /* Spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+
+  /* Easing — mirrored in src/motion/config.js */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-calm: cubic-bezier(0.33, 0, 0.2, 1);
+  --dur-fast: 160ms;
+  --dur: 280ms;
+  --dur-slow: 600ms;
+
+  /* Type */
+  --font: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-base: 16px;
+
+  /* Layout */
+  --nav-h: 64px;
+  --content-max: 1240px;
+
+  color-scheme: dark;
+}

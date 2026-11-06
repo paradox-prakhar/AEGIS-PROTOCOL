@@ -11,14 +11,19 @@
     "test:contracts": "node --test scripts/contracts.test.mjs"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "ethers": "^6.17.0",
+    "framer-motion": "^14.10.1",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
     "ganache": "^7.9.2",
     "solc": "^0.8.38",
+    "tailwindcss": "^4.3.5",
     "vite": "^6.1.0"
   }
 }
