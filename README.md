@@ -172,5 +172,5 @@ Custom pieces (no source offers them): the cursor system, radar sweep, scramble 
 
 - Lighthouse scores and a screen-reader pass have not been measured in this environment. Keyboard navigation, focus states and 375px layouts were checked manually.
 - The Anatomy figure is a static "Figure"-tier drawing. Anatomy's geometry audit and line-end checks (which need headless Chrome tooling) were not run.
-- **Screenshot checking needs `'wasm-unsafe-eval'` in `script-src`.** The text reader is WebAssembly, and the CSP in `vercel.json` / `public/_headers` doesn't allow compiling it yet. Until then the Screenshot tab tells people to paste the text instead; everything else works under the current CSP.
+- The CSP (`vercel.json`, `public/_headers`) includes `'wasm-unsafe-eval'` in `script-src` because the screenshot reader is WebAssembly. It permits compiling WebAssembly only, not JavaScript `eval`. If a host serves a stricter policy, the Screenshot tab tells people to paste the text instead.
 - The public Arc RPC sometimes rate-limits registry reads (HTTP 429). The UI then shows the registry as unavailable rather than any safe verdict.
