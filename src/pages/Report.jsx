@@ -12,13 +12,13 @@ import { downloadJson, isEvmAddress, isTxHash } from '../lib/format';
 const CATEGORIES = ['Approval phishing', 'Address poisoning', 'Rug pull', 'Impersonation', 'Drainer contract', 'Other suspicious activity'];
 const blank = { subject: '', category: CATEGORIES[0], description: '', txs: '' };
 
-export default function Report() {
+export default function Report({ params = {} }) {
   const wallet = useWallet();
   const reg = useRegistry();
   const tx = useTx();
   const toast = useToast();
   const [saved, setSaved] = useLocalList('aegis-evidence-packages');
-  const [form, setForm] = useState(blank);
+  const [form, setForm] = useState(() => ({ ...blank, subject: params.address || blank.subject }));
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString());
   const [backedUp, setBackedUp] = useState(false);
   const [touched, setTouched] = useState(false);

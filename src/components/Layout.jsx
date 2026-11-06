@@ -169,7 +169,7 @@ export function Layout({ path, children }) {
           />
           <div className="floatnav-end">
             {path !== 'recovery' && (
-              <a className="btn btn-calm btn-sm help-now" href="#/recovery"><HeartHandshake size={15} /><span>I&apos;ve been scammed</span></a>
+              <a className="btn btn-calm btn-sm help-now" href="#/recovery" aria-label="I have been scammed — get help"><HeartHandshake size={15} /><span>I&apos;ve been scammed</span></a>
             )}
             <WalletMenu />
             <button className="icon-btn menu-btn" aria-label="Open all pages" aria-expanded={menu} aria-controls="site-menu" onClick={() => setMenu(true)}><Menu size={20} /></button>
