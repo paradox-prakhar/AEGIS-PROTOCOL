@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="440" viewBox="0 0 200 220">
+  <!-- Aegis footer art: a phone showing a message that has been checked. -->
+  <rect width="200" height="220" fill="#fff"/>
+  <rect x="52" y="8" width="96" height="204" rx="16" fill="#1e2b4a"/>
+  <rect x="60" y="24" width="80" height="172" rx="6" fill="#fff"/>
+  <rect x="88" y="14" width="24" height="4" rx="2" fill="#fff"/>
+  <rect x="68" y="40" width="58" height="34" rx="9" fill="#8a96ae"/>
+  <rect x="68" y="84" width="64" height="44" rx="9" fill="#55627e"/>
+  <rect x="76" y="96" width="44" height="5" rx="2.5" fill="#fff"/>
+  <rect x="76" y="108" width="32" height="5" rx="2.5" fill="#fff"/>
+  <circle cx="100" cy="160" r="20" fill="#1e2b4a"/>
+  <path d="m90 160 7 7 13-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
