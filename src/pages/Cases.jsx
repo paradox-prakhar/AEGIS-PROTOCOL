@@ -126,9 +126,8 @@ export default function Cases() {
     <div className="calm">
       <RevealGroup className="page-header" onMount>
         <div>
-          <RevealItem calm className="eyebrow"><ListChecks size={14} /> My cases</RevealItem>
-          <RevealItem calm as="h1">Track every step, in one place.</RevealItem>
-          <RevealItem calm as="p">Each incident shows what’s done and what’s next. Records stay in this browser; registry status updates live from Arc Testnet.</RevealItem>
+                    <RevealItem calm as="h1">My cases</RevealItem>
+          <RevealItem calm as="p">What’s done, and what’s next.</RevealItem>
         </div>
       </RevealGroup>
 
@@ -154,7 +153,7 @@ export default function Cases() {
 
       <Reveal calm as="section" className="card" aria-labelledby="mine-title">
         <header className="card-head">
-          <div><h3 id="mine-title">Reports you signed onchain</h3><p className="muted">Reports submitted from your connected wallet.</p></div>
+          <div><h3 id="mine-title">Reports you signed onchain</h3></div>
         </header>
         {!w.isConnected ? (
           <EmptyState icon={Wallet} title="Connect your wallet to see your reports"

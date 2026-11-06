@@ -99,7 +99,7 @@ Dependency review: npm audit reported advisories in the Ganache test-tool depend
 
 ## Interface (ui-upgrade)
 
-A futuristic, calm interface for everyday users, including non-technical and older users on phones. Dark glass panels, one trust colour (teal) and consistent status colours: **green = safe, amber = suspicious, red = danger**.
+A minimal white & blue interface for everyday users, including non-technical and older users on phones: short labels, one idea per section, and one trust colour (blue). Status colours are used only for results: **green = safe, amber = suspicious, red = danger**.
 
 ### Setup
 
@@ -108,7 +108,7 @@ npm ci
 npm run dev        # http://127.0.0.1:5173
 npm test           # risk + scam-signal rule tests
 npm run build
-node scripts/figures/inspection-gate.mjs   # rebuild the isometric "how it works" figure
+node scripts/figures/phone-check.mjs      # rebuild the isometric "how it works" figure
 ```
 
 Stack (unchanged): Vite 6 + React 19 + JSX + plain CSS. The upgrade adds:
@@ -116,7 +116,9 @@ Stack (unchanged): Vite 6 + React 19 + JSX + plain CSS. The upgrade adds:
 | Package | Why |
 |---|---|
 | `tailwindcss` 4 + `@tailwindcss/vite` | Required by Vengeance UI components. Preflight is **not** loaded, so existing CSS keeps control of base styles. |
-| `framer-motion` | Motion base for all animation (Vengeance components import it). |
+| `framer-motion` | Motion base for UI animation (Vengeance components import it). |
+| `three` | WebGL for the wave-grid hero background and the particle shield. Both are lazy-loaded on the home page only, pause when off-screen, and are skipped for reduced-motion users. |
+| `gsap` | Used by the animated footer and the particle intro (as the Vengeance components ship). Free under GSAP’s standard no-charge licence (not MIT). |
 | `@fontsource-variable/space-grotesk`, `@fontsource-variable/geist-mono` | Self-hosted fonts (bundled by Vite), so no Google Fonts request is needed under the CSP. |
 | `clsx`, `tailwind-merge` | The `cn()` helper shadcn components expect (`src/lib/utils.js`). |
 | `tesseract.js` + `@tesseract.js-data/eng` | Reads text from screenshots **in the browser**. Lazy-loaded only when a screenshot is checked. The worker, engine and English data are copied to `public/ocr/` by `scripts/copy-ocr-assets.mjs` (runs before `dev` and `build`) and served from the site itself, never a CDN. |
@@ -127,7 +129,7 @@ GSAP and Lenis were deliberately not added: nothing needs GSAP, and smooth-scrol
 
 | Route | Screen |
 |---|---|
-| `#/overview` | Landing: hero, live registry counters, how it works, trust promise |
+| `#/overview` | Home: wave-grid hero with particle shield, typing-keyboard demo, “one checker” solar system, three steps, live counters |
 | `#/scanner` | Scam checker: message, link, phone/UPI, wallet address, screenshot |
 | `#/recovery` | Emergency flow: calm checklist with saved progress + incident form |
 | `#/cases` | Case tracker: timeline per incident with live registry status |
@@ -144,8 +146,8 @@ The scam checker's rules are transparent pattern checks, not a threat-intelligen
 
 | Source | Used for | How it was installed | License / attribution |
 |---|---|---|---|
-| [Vengeance UI](https://www.vengenceui.com/) | `spotlight-navbar` (floating nav), `stagger-text` (split headings), `stats-counter` (landing counters), `glow-border-card` (verdict card), `flip-fade-text` (radar status words), `perspective-grid` (hero background), `faq-accordion` (emergency + helpline FAQs), `expandable-bento-grid` (Education hub) | shadcn CLI with the `@vengeanceui` registry in `components.json` → `src/components/vengeance/` | **MIT © Ashutoshx7.** Each file keeps an attribution header. Adapted for Vite and accessibility (notes in file headers). The `glow-conic` CSS is copied from the Vengeance repo and attributed in `src/styles/aegis.css`. |
-| [Anatomy](https://github.com/wheresryan22/anatomy) | Isometric "how it works" figure (`public/figures/inspection-gate.svg`) | Kit vendored in `scripts/figures/vendor/anatomy/` (with `LICENSE` and `VERSION` commit), figure built by `scripts/figures/inspection-gate.mjs` | **MIT © 2026 Ryan.** Keep `vendor/anatomy/LICENSE`. |
+| [Vengeance UI](https://www.vengenceui.com/) | `wave-grid-background` (home hero), `interactive-particles` (particle shield), `typing-keyboard` (paste-and-check demo), `solar-system` (what Aegis checks), `animated-footer` (site footer), `spotlight-navbar` (floating nav), `stagger-text` (split headings), `stats-counter` (counters), `glow-border-card` (verdict card), `flip-fade-text` (radar status words), `faq-accordion` (FAQs), `expandable-bento-grid` (Learn) | shadcn CLI / registry JSON (`solar-system` from the repo source) → `src/components/vengeance/` | **MIT © Ashutoshx7.** Each file keeps an attribution header listing what was adapted (JSX, light theme, accessibility, pausing off-screen). The footer uses our own artwork (`public/footer/*.svg`), not the demo photos. The `glow-conic` CSS is copied from the Vengeance repo and attributed in `src/styles/aegis.css`. |
+| [Anatomy](https://github.com/wheresryan22/anatomy) | Isometric "how it works" figure: a phone with a message thread, a lens checking one message, and the Aegis shield (`public/figures/phone-check.svg`) | Kit vendored in `scripts/figures/vendor/anatomy/` (with `LICENSE` and `VERSION` commit), figure built by `scripts/figures/phone-check.mjs` | **MIT © 2026 Ryan.** Keep `vendor/anatomy/LICENSE`. |
 | [AnimMasterLib](https://animmasterlib.dev/) | **Not used.** | — | Paid only. Its terms forbid redistributing source, which is incompatible with this public repo. |
 | [Skiper UI](https://skiper-ui.com/) | **Not used.** | — | Its terms forbid copying/redistribution, and almost all components are paid. |
 
