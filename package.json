@@ -5,26 +5,36 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "npm run contracts:compile && vite build",
+    "build": "npm run contracts:compile && node scripts/copy-ocr-assets.mjs && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/risk.test.js src/arkiv-validation.test.js src/test-report.test.js",
+    "test": "node --test src/risk.test.js src/heuristics.test.js src/arkiv-validation.test.js src/test-report.test.js",
     "contracts:compile": "node scripts/compile.mjs",
     "test:contracts": "node --test scripts/contracts.test.mjs",
     "test:all": "npm test && npm run test:contracts",
     "deploy:check": "node scripts/deployment-check.mjs",
-    "deploy:verify": "node scripts/verify-deployment.mjs"
+    "deploy:verify": "node scripts/verify-deployment.mjs",
+    "predev": "node scripts/copy-ocr-assets.mjs"
   },
   "dependencies": {
+    "@arkiv-network/sdk": "1.0.1",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "clsx": "^2.1.1",
     "ethers": "^6.17.0",
+    "framer-motion": "^14.10.1",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@arkiv-network/sdk": "1.0.1",
+    "tailwind-merge": "^3.7.0",
+    "tesseract.js": "^7.0.0",
     "viem": "^2.57.16"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
     "ganache": "^7.9.2",
     "solc": "0.8.38",
+    "tailwindcss": "^4.3.5",
     "vite": "^6.1.0"
   },
   "engines": {

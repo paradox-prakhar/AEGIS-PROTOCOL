@@ -213,3 +213,80 @@ export async function deployRegistry(reviewer, onSubmitted = () => {}) {
 
 // Exposes the version-aware contract for cross-chain evidence verification.
 export async function arkivRegistry(address,write=false){return (await registry(address,write)).contract;}
+
+// ---------------------------------------------------------------------------
+// Interface helpers used by the redesigned pages (src/pages, src/state).
+// Thin wrappers over the version-aware layer above; no new contract logic.
+// ---------------------------------------------------------------------------
+
+export const CHAIN_NAME = 'Arc Testnet';
+export const FAUCET = 'https://faucet.circle.com/';
+export const DEFAULT_REVIEWER = defaultReviewer;
+export const STATUSES = STATUS;
+/** How many of the newest reports the dashboard keeps in memory. */
+export const READ_WINDOW = 100;
+export { deployment, CHAIN_HEX };
+export const explorerTx = txUrl;
+export const explorerAddress = addressUrl;
+export const getReadProvider = reader;
+export const bytesHash = (bytes) => keccak256(bytes);
+
+export function hasInjectedWallet() {
+  return typeof window !== 'undefined' && Boolean(window.ethereum);
+}
+
+/** Read wallet state without prompting the user. */
+export async function peekWallet() {
+  if (!hasInjectedWallet()) return { account: '', chainId: null };
+  const [accounts, chainId] = await Promise.all([
+    window.ethereum.request({ method: 'eth_accounts' }),
+    window.ethereum.request({ method: 'eth_chainId' }),
+  ]);
+  return { account: accounts?.[0] || '', chainId: Number(BigInt(chainId)) };
+}
+
+/** Switch (or add) Arc Testnet; connectWallet() does the same as part of connecting. */
+export async function switchToArc() {
+  const eth = window.ethereum;
+  try {
+    await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_HEX }] });
+  } catch (e) {
+    if (e.code !== 4902 && e?.data?.originalError?.code !== 4902) throw e;
+    await eth.request({
+      method: 'wallet_addEthereumChain',
+      params: [{ chainId: CHAIN_HEX, chainName: CHAIN_NAME, nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 }, rpcUrls: [RPC], blockExplorerUrls: [EXPLORER] }],
+    });
+  }
+}
+
+/** registryInfo() plus the current block, in the shape the dashboard expects (`count`). */
+export async function fetchRegistryMeta(address) {
+  const [info, blockNumber] = await Promise.all([registryInfo(address), reader().getBlockNumber()]);
+  return { ...info, count: info.reportCount, blockNumber };
+}
+
+export async function fetchReport(address, id) {
+  const { contract } = await registry(address);
+  return toRow(await contract.reports(id), Number(id));
+}
+
+export async function hasChallenged(address, id, account) {
+  const { contract } = await registry(address);
+  return contract.challenged(id, account);
+}
+
+/** v1 registries revert with reason strings; v2 uses custom errors handled by describeError(). */
+const V1_REASONS = {
+  'reviewer only': 'Only the registry reviewer can resolve reports.',
+  'review window': 'The two-day review window for this report has not elapsed yet.',
+  closed: 'This report is already resolved and can no longer change.',
+  'invalid challenge': 'This wallet has already challenged this report, or the evidence is empty.',
+  'invalid evidence': 'The subject address or evidence hash is invalid.',
+};
+
+export function friendlyError(e) {
+  if (!e) return 'Unknown error.';
+  const reason = e.reason || e.revert?.args?.[0];
+  if (reason && V1_REASONS[reason]) return V1_REASONS[reason];
+  return describeError(e);
+}
