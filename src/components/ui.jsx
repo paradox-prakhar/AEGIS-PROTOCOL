@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useMagnetic } from './cursor/useMagnetic';
 import { AlertTriangle, Check, CheckCircle2, Copy, ExternalLink, Info, Loader2, ShieldAlert, XCircle } from 'lucide-react';
 import { explorerAddress, explorerTx } from '../chain';
 import { shortAddress } from '../lib/format';
 
-export function Button({ variant = 'primary', size, icon: Icon, loading, children, className = '', ...props }) {
+export function Button({ variant = 'primary', size, icon: Icon, loading, magnetic, children, className = '', ...props }) {
+  const ref = useRef(null);
+  // Large primary CTAs are magnetic by default; anything else can opt in.
+  useMagnetic(ref, { enabled: magnetic ?? (variant === 'primary' && size === 'lg') });
   return (
-    <button className={`btn btn-${variant} ${size ? `btn-${size}` : ''} ${className}`} disabled={loading || props.disabled} {...props}>
+    <button ref={ref} className={`btn btn-${variant} ${size ? `btn-${size}` : ''} ${className}`} disabled={loading || props.disabled} {...props}>
       {loading ? <Loader2 size={16} className="spin" /> : Icon && <Icon size={16} />}
       {children}
     </button>
