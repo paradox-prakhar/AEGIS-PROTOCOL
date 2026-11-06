@@ -33,3 +33,14 @@ test('assess: unlinked Arkiv records never raise the score and Arkiv failure is 
   assert.ok(r.reasons.some((x) => x.includes('ignored')));
   assert.ok(assess({ arcRows: [arc({ status: 'Rejected' })], arkivError: 'timeout' }).reasons.some((x) => x.includes('Arkiv could not be read')));
 });
+
+import { expiryInfo, recoveryPackage } from './arkiv-meta.js';
+test('expiryInfo converts blocks to days and flags renewal', () => {
+  const t = { currentBlock: 1000n, blockDuration: 2 };
+  assert.equal(expiryInfo(1000n + 43200n, t).daysLeft, 1);
+  assert.equal(expiryInfo(1000n + 43200n, t).needsRenewal, true);
+  assert.equal(expiryInfo(1000n + 43200n * 90n, t).needsRenewal, false);
+  const gone = expiryInfo(900n, t);
+  assert.deepEqual([gone.expired, gone.secondsLeft], [true, 0]);
+  assert.equal(recoveryPackage({ reporter: '0x1' }).kind, 'recovery-package');
+});

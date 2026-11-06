@@ -4,7 +4,7 @@ import {
   activeRegistry, addressUrl, configuredRegistry, connectWallet, defaultReviewer, deployRegistry, describeError,
   evidenceHash, expectedDeployer, fetchReports, registryInfo, rememberRegistry, reportIdFromReceipt, sendRegistryTx, txUrl,
 } from './chain';
-import { CATEGORIES, MAX_DESCRIPTION, arkivEntityUrl, arkivTxUrl } from './arkiv-meta';
+import { CATEGORIES, MAX_DESCRIPTION, arkivEntityUrl, arkivTxUrl, recoveryPackage } from './arkiv-meta';
 const arkiv = () => import('./arkiv');
 
 const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
@@ -28,6 +28,7 @@ export default function Onchain() {
   const [tx, setTx] = useState('');
   const [dual, setDual] = useState(null);
   const busyRef = useRef(false);
+  const [mine, setMine] = useState(null);
 
   const validRegistry = isAddress(address);
   const isReviewer = same(account, info?.reviewer);
@@ -105,7 +106,32 @@ export default function Onchain() {
       throw new Error(`${describeError(e)} Your Arkiv record is saved but is not a verified report until Arc succeeds. Submit again to retry with the same Arkiv entity.`);
     }
     savePending(null);
-    setDual({ stage: 'done', entityKey: pending.entityKey, arkivTx: pending.arkivTx, arcTx: receipt.hash, reportId: reportIdFromReceipt(receipt, address) });
+    setDual({ stage: 'done', entityKey: pending.entityKey, arkivTx: pending.arkivTx, arcTx: receipt.hash, reportId: reportIdFromReceipt(receipt, address), reporter: pending.reporter, evidence: { text: String(f.get('evidence')), evidenceHash: hash, subject, category, description, uri } });
+  }
+
+  function saveFile(name, data) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  const downloadReceipt = () => saveFile(`aegis-recovery-${dual.entityKey.slice(2, 10)}.json`, recoveryPackage({
+    reporter: dual.reporter,
+    records: [{ arkivEntityKey: dual.entityKey, arkivTx: dual.arkivTx, arcRegistry: address, arcReportId: dual.reportId, arcTx: dual.arcTx }],
+    evidence: dual.evidence,
+  }));
+
+  async function loadMine() {
+    const { fetchMyArkivReports } = await arkiv();
+    setMine(await fetchMyArkivReports(account));
+    setMessage('Loaded your Arkiv records.');
+  }
+
+  async function renew(entityKey) {
+    setMessage('Approve the Arkiv (Rabdi) renewal transaction in your wallet…');
+    const r = await (await arkiv()).extendArkivReport(entityKey);
+    setTx(''); setMessage(`Renewed for another year. Arkiv tx ${short(r.txHash)}.`);
+    await loadMine();
   }
 
   async function linkBack() {
@@ -170,6 +196,7 @@ export default function Onchain() {
           {dual.entityKey && <p className="mono small">Arkiv entity: <a href={arkivEntityUrl(dual.entityKey)} target="_blank" rel="noreferrer">{short(dual.entityKey)} ↗</a>{dual.arkivTx && <> · <a href={arkivTxUrl(dual.arkivTx)} target="_blank" rel="noreferrer">Arkiv tx ↗</a></>}</p>}
           {dual.arcTx && <p className="mono small">Arc report #{dual.reportId ?? '?'} · <a href={txUrl(dual.arcTx)} target="_blank" rel="noreferrer">Arc tx ↗</a></p>}
           {dual.stage === 'done' && !dual.linkTx && dual.reportId !== null && <button type="button" className="secondary" disabled={busy} onClick={() => run(linkBack)}>Record Arc report id on Arkiv (optional)</button>}
+          {(dual.stage === 'done' || dual.stage === 'retry') && dual.evidence && <button type="button" className="secondary" onClick={downloadReceipt}>Download recovery package (keep your evidence)</button>}
           {dual.linkTx && <p className="mono small"><a href={arkivTxUrl(dual.linkTx)} target="_blank" rel="noreferrer">Arkiv link tx ↗</a></p>}
         </div>
       )}
@@ -254,6 +281,22 @@ export default function Onchain() {
           {isPending && <button type="button" className="primary" disabled={busy} onClick={() => run(() => write('acceptReviewer', [], 'You are now the reviewer.'))}>Accept reviewer role</button>}
         </div>
       )}
+
+      <details className="deploy">
+        <summary>My Arkiv records &amp; renewal</summary>
+        <p>Arkiv entities expire after 365 days unless renewed. Renewal is an Arkiv (Rabdi) transaction signed by the record's owner.</p>
+        <button type="button" className="secondary" disabled={busy || !account} onClick={() => run(loadMine)}>Load my Arkiv records</button>
+        {mine && !mine.length && <p>No Arkiv records for this wallet.</p>}
+        {mine?.map((r) => (
+          <div className="record" key={r.entityKey}>
+            <span className={r.expired || r.needsRenewal ? 'badge warn' : 'badge'}>{r.expired ? 'Expired' : `${Math.floor(r.daysLeft)} days left`}</span>
+            <p className="mono small"><a href={arkivEntityUrl(r.entityKey)} target="_blank" rel="noreferrer">{short(r.entityKey)} ↗</a> · {r.category} · {short(r.subject)}{r.arcReportId ? ` · Arc #${r.arcReportId}` : ''}</p>
+            {!r.expired && <button type="button" className="secondary" disabled={busy} onClick={() => run(() => renew(r.entityKey))}>Renew 365 days</button>}
+            {r.expired && <p>Expired records cannot be renewed. The Arc report and evidence hash remain onchain.</p>}
+          </div>
+        ))}
+        {mine?.length > 0 && <button type="button" className="secondary" onClick={() => saveFile('aegis-arkiv-records.json', recoveryPackage({ reporter: account, records: mine.map((r) => ({ arkivEntityKey: r.entityKey, subject: r.subject, evidenceHash: r.evidenceHash, arcReportId: r.arcReportId, expiresAtBlock: String(r.expiresAt) })) }))}>Download records index</button>}
+      </details>
 
       <h3 style={{ marginTop: 30 }}>Shared registry records</h3>
       <div className="tablewrap">

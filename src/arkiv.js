@@ -7,7 +7,7 @@ import { createPublicClient, createWalletClient, ExpirationTime } from '@arkiv-n
 import { rabdi } from '@arkiv-network/sdk/chains';
 import { and, asc, eq, gt } from '@arkiv-network/sdk/query';
 import { addr, defineSchema, key, str, u256 } from '@arkiv-network/sdk/schema';
-import { ARC_CHAIN_ID, ARKIV_EXPLORER as META_EXPLORER, CATEGORIES, MAX_DESCRIPTION, REPORT_LIFETIME_DAYS } from './arkiv-meta.js';
+import { ARC_CHAIN_ID, expiryInfo, ARKIV_EXPLORER as META_EXPLORER, CATEGORIES, MAX_DESCRIPTION, REPORT_LIFETIME_DAYS } from './arkiv-meta.js';
 import { custom, http, isAddress, isHex, numberToHex } from 'viem';
 
 const env = import.meta.env || {};
@@ -125,4 +125,36 @@ export async function fetchArkivReports(subject) {
     after = entities[entities.length - 1].$key;
   }
   return out;
+}
+
+/** The connected wallet's own Arkiv reports with remaining life, so they can be renewed before they expire. */
+export async function fetchMyArkivReports(owner) {
+  if (!isAddress(owner)) throw new Error('Connect a wallet first.');
+  const client = reader();
+  const [timing, { entities }] = await Promise.all([
+    client.getBlockTiming(),
+    client
+      .select({ $key: true, $expiresAt: true, subject: true, category: true, evidenceHash: true, description: true, arcReportId: true })
+      .from(AegisReports)
+      .ownedBy(owner)
+      .orderBy(asc('$key'))
+      .limit(100)
+      .fetch(),
+  ]);
+  return entities.map((e) => ({
+    entityKey: e.$key,
+    subject: e.subject.value,
+    category: e.category.value,
+    evidenceHash: e.evidenceHash.value,
+    description: e.description.value,
+    arcReportId: e.arcReportId?.value ?? null,
+    expiresAt: e.$expiresAt,
+    ...expiryInfo(e.$expiresAt, timing),
+  }));
+}
+
+/** Sets a new expiry `days` from now. The engine rejects an extension shorter than the remaining life. */
+export async function extendArkivReport(entityKey, days = REPORT_LIFETIME_DAYS) {
+  const wallet = await connectArkivWallet();
+  return wallet.extendEntity({ entityKey, expiration: ExpirationTime.fromDays(days) });
 }

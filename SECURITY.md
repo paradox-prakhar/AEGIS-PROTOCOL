@@ -26,3 +26,12 @@ Do not open public issues for vulnerabilities. Contact the maintainers privately
 - [ ] Dedicated, origin-restricted RPC endpoint and uptime monitoring
 - [ ] Replace Ganache dev tooling (known upstream advisories) with maintained tooling
 - [ ] Explorer source verification of the deployed bytecode
+
+## Arkiv integration notes
+
+- Arkiv is public and writable by anyone. An Arkiv record is never trusted on its own: it counts only when an Arc report links back with the same entity key, reporter, subject and evidence hash.
+- Only a hash and a short public summary are stored on Arkiv. Evidence text stays with the reporter; the recovery package downloaded after submission is the only copy the app can produce.
+- Arkiv entities expire (365 days by default). Renew from the Onchain workspace. Expired entities cannot be renewed; the Arc report and hash remain.
+- The Arkiv access key is public by design. Restrict it to your site origins in Arkiv Hub. Never place a private key in any `VITE_` variable.
+- The production dependency tree audits clean (`npm audit --omit=dev`). Dev-only tooling (ganache) bundles old packages that never ship to the browser.
+- Not independently audited. Do not use with real funds until an external audit is complete.
