@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "npm run contracts:compile && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/risk.test.js src/arkiv-validation.test.js",
+    "test": "node --test src/risk.test.js src/arkiv-validation.test.js src/test-report.test.js",
     "contracts:compile": "node scripts/compile.mjs",
     "test:contracts": "node --test scripts/contracts.test.mjs",
     "test:all": "npm test && npm run test:contracts",

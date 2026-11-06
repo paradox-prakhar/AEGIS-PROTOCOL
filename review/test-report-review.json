@@ -1,0 +1,68 @@
+{
+  "label": "TEST / SIMULATED — UNSIGNED REVIEW DRAFT",
+  "approvalStatus": "Awaiting user review; no transaction requested",
+  "reporter": "0x2Df43B66A31cd93792E4a32Af494b5a18c614148",
+  "subject": "0x1111111111111111111111111111111111111111",
+  "category": "PHISHING (SIMULATED)",
+  "proposedInitialStatus": "PENDING REVIEW (only after Arc confirmation)",
+  "arc": {
+    "chainId": 5042002,
+    "registry": "0x5eD536a9a2856109E4a02016ad2a99B3865e91F0",
+    "contractVersion": 1,
+    "method": "submit(address,bytes32)",
+    "args": [
+      "0x1111111111111111111111111111111111111111",
+      "0xb034d7ec48a1bddf84b4c57a14f10c0966304c1f091757894a13cec984c8f3eb"
+    ],
+    "value": "0",
+    "reportId": null,
+    "transactionHash": null
+  },
+  "arkiv": {
+    "chain": "Rabdi testnet",
+    "chainId": 7794095,
+    "schema": "aegis.arc.scam-reports.v1",
+    "entityKey": null,
+    "reference": null,
+    "referenceTemplate": "arkiv://7794095/<confirmed-entity-key>",
+    "referenceNote": "Application reference format; entity key is assigned only after a confirmed create transaction",
+    "storageDays": 30,
+    "public": true,
+    "readOnly": true,
+    "permissionlessExtension": true,
+    "transactionHash": null,
+    "fields": {
+      "registry": "0x5ed536a9a2856109e4a02016ad2a99b3865e91f0",
+      "subject": "0x1111111111111111111111111111111111111111",
+      "arcTx": "<confirmed Arc receipt hash>",
+      "reportId": "<confirmed Arc report ID>",
+      "hash": "0xb034d7ec48a1bddf84b4c57a14f10c0966304c1f091757894a13cec984c8f3eb",
+      "evidence": "Exact UTF-8 text in test-evidence.json"
+    }
+  },
+  "evidenceHash": "0xb034d7ec48a1bddf84b4c57a14f10c0966304c1f091757894a13cec984c8f3eb",
+  "evidence": {
+    "schema": "aegis.test-evidence.v1",
+    "classification": "TEST / SIMULATED",
+    "isTest": true,
+    "title": "Aegis Protocol synthetic phishing workflow test",
+    "subject": "0x1111111111111111111111111111111111111111",
+    "network": "Arc Testnet",
+    "chainId": 5042002,
+    "category": "PHISHING (SIMULATED)",
+    "publicEvidence": "Synthetic transaction hash and mock phishing evidence generated specifically for testing. No real victim or scam allegation is involved.",
+    "mockTransaction": {
+      "label": "TEST / SIMULATED — not a real transaction",
+      "hash": "0x684d8ff171821b604f6b1b00ba6a72695cb9ad9d187e30665bf1b85773cf8bee",
+      "existsOnchain": false,
+      "derivation": "Keccak-256 of a fixed synthetic test seed; not a blockchain receipt"
+    },
+    "mockPhishingEvidence": {
+      "label": "TEST / SIMULATED — fictional scenario",
+      "url": "https://aegis-phishing-demo.invalid/claim",
+      "description": "Fictional claim page requesting a token approval. No site was visited, no approval was requested, and no funds were stolen."
+    },
+    "realVictim": false,
+    "realScamAllegation": false
+  }
+}
