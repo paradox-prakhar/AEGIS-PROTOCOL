@@ -404,3 +404,61 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   .trust-card { padding: 22px; }
   .stat strong { font-size: 26px; }
 }
+
+/* ---------- Education hub (bento) ---------- */
+.bento { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 14px; }
+.bento-cell.bento-wide { grid-column: span 2; }
+.bento-card { position: relative; width: 100%; height: 100%; min-height: 150px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px; text-align: left; color: var(--text); cursor: pointer;
+  background: var(--surface); backdrop-filter: blur(var(--blur)); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color var(--dur), transform var(--dur) var(--ease-out); }
+.bento-card:hover { border-color: rgba(var(--accent-rgb), 0.35); transform: translateY(-3px); }
+.bento-icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: var(--accent); background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.16), rgba(var(--accent-2-rgb), 0.12)); border: 1px solid rgba(var(--accent-rgb), 0.25); }
+.bento-text h3 { font-size: 18px; }
+.bento-text p { margin-top: 6px; font-size: 15px; color: var(--text-2); }
+.bento-tag { position: absolute; top: 18px; right: 18px; font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 8px; border-radius: 99px; color: var(--warning); background: var(--warning-soft); border: 1px solid rgba(var(--warning-rgb), 0.3); }
+.bento-scrim { position: fixed; inset: 0; z-index: 90; background: rgba(2, 3, 6, 0.7); backdrop-filter: blur(4px); }
+.bento-modal-wrap { position: fixed; inset: 0; z-index: 91; display: grid; place-items: center; padding: 16px; }
+.bento-modal { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; border-radius: var(--radius-lg); border: 1px solid var(--border-2); background: var(--surface-solid); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9); }
+.bento-modal-art { height: 120px; display: grid; place-items: center; background: radial-gradient(300px 120px at 50% 100%, rgba(var(--accent-rgb), 0.18), transparent 70%), linear-gradient(180deg, rgba(var(--accent-2-rgb), 0.12), transparent); border-bottom: 1px solid var(--border); }
+.bento-modal-icon { color: var(--accent); transform: scale(2); }
+.bento-modal-head { display: flex; justify-content: space-between; gap: 12px; padding: 20px 22px 6px; }
+.bento-modal-head h3 { font-size: 22px; }
+.bento-modal-head p { margin-top: 6px; font-size: 15.5px; color: var(--text-2); }
+.bento-modal-body { padding: 8px 22px 24px; }
+.learn-detail { display: flex; flex-direction: column; gap: 16px; }
+.learn-detail h4 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 8px; color: var(--text); }
+.learn-detail h4 svg { color: var(--warning); }
+.learn-detail ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: var(--text-2); }
+.learn-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.rules-card h2 { font-size: 22px; margin-bottom: 16px; }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rules li { display: flex; gap: 12px; }
+.rules .mono { color: var(--accent); font-size: 13px; margin-top: 3px; }
+.rules b { font-size: 16px; }
+.rules p { margin-top: 4px; font-size: 15px; color: var(--text-2); }
+
+/* ---------- Resources ---------- */
+.helpline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.helpline header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.helpline h3 { font-size: 18px; }
+.helpline > p { margin-top: 8px; font-size: 15px; }
+.helpline-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.helpline-call { font-size: 18px; min-height: 52px; }
+.helpline-verified { display: flex; gap: 6px; align-items: center; margin-top: 14px; font-size: 13px; color: var(--text-3); }
+.helpline-verified svg { color: var(--safe); }
+.helpline-empty { display: flex; gap: 16px; align-items: flex-start; border-color: rgba(var(--info-rgb, 124, 182, 255), 0.25); }
+.helpline-empty > svg { color: var(--info); flex-shrink: 0; margin-top: 3px; }
+.helpline-empty h3 { font-size: 18px; }
+.helpline-empty p { margin-top: 8px; font-size: 15.5px; color: var(--text-2); max-width: 760px; }
+.helpline-empty b { color: var(--text); }
+.help-links { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.help-band-accent { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.3); background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.1), transparent); }
+
+@media (max-width: 980px) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rules { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .bento { grid-template-columns: 1fr; }
+  .bento-cell.bento-wide { grid-column: auto; }
+  .help-links { grid-template-columns: 1fr; }
+}
