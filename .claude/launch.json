@@ -1,0 +1,43 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aegis-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "aegis-local-chain",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/local-chain.mjs"
+      ],
+      "port": 8545
+    },
+    {
+      "name": "aegis-dev-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180,
+      "env": {
+        "VITE_ARC_RPC_URL": "http://127.0.0.1:8545",
+        "VITE_REGISTRY_ADDRESS": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab"
+      }
+    }
+  ]
+}
