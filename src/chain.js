@@ -184,6 +184,23 @@ export function describeError(e) {
   return e?.shortMessage || e?.message || 'Unexpected error.';
 }
 
+/** True when a public RPC refused the request (HTTP 429 / -32005); ethers reports this as "missing revert data". */
+export function isRateLimited(e) {
+  let text = String(e?.message || '');
+  try { text += JSON.stringify(e?.info ?? e?.error ?? null); } catch { /* circular */ }
+  text = text.toLowerCase();
+  return text.includes('rate limit') || text.includes('-32005') || text.includes('"httpstatus":429');
+}
+
+async function withRateLimitRetry(fn, attempts = 5) {
+  for (let i = 0; ; i++) {
+    try { return await fn(); } catch (e) {
+      if (!isRateLimited(e) || i >= attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+    }
+  }
+}
+
 /**
  * Simulates then sends a registry transaction. v1 does not accept evidence URIs; they are dropped.
  * Calls `onSubmitted(hash)` once the wallet broadcasts it. Resolves with the confirmed receipt.
@@ -192,8 +209,10 @@ export async function sendRegistryTx(address, method, args, onSubmitted = () => 
   const { contract, version } = await registry(address, true);
   const finalArgs = version < 2 && (method === 'submit' || method === 'challenge') ? args.slice(0, 2) : args;
   if (version < 2 && !['submit', 'challenge', 'resolve'].includes(method)) throw new Error('This action requires a v2 registry.');
-  await contract[method].staticCall(...finalArgs);
-  const tx = await contract[method](...finalArgs);
+  // Read-only calls retry when a public RPC rate-limits; the signed send itself is never retried.
+  await withRateLimitRetry(() => contract[method].staticCall(...finalArgs));
+  const gas = await withRateLimitRetry(() => contract[method].estimateGas(...finalArgs));
+  const tx = await contract[method](...finalArgs, { gasLimit: (gas * 12n) / 10n });
   onSubmitted(tx.hash);
   const receipt = await tx.wait(1);
   if (!receipt || receipt.status !== 1) throw new Error('Transaction reverted.');
@@ -286,6 +305,7 @@ const V1_REASONS = {
 
 export function friendlyError(e) {
   if (!e) return 'Unknown error.';
+  if (isRateLimited(e)) return 'The Arc network is busy right now. Nothing was sent; please try again in a minute.';
   const reason = e.reason || e.revert?.args?.[0];
   if (reason && V1_REASONS[reason]) return V1_REASONS[reason];
   return describeError(e);
