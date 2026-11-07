@@ -16,25 +16,25 @@ import { useCursor } from '../cursor/CursorSystem';
 
 const MODES = [
   { key: 'message', label: 'Message', icon: MessageSquareText, words: ['READING', 'PRESSURE', 'OTP ASKS', 'LINKS'],
-    steps: ['Reading the message', 'Looking for fear and urgency tactics', 'Checking for OTP, PIN or payment requests', 'Inspecting any links', 'Preparing your result'],
+    steps: ['Reading', 'Pressure tactics', 'OTP or payment asks', 'Links'],
     sample: 'Dear customer, your SBI KYC expires today and your account will be BLOCKED. Update immediately at http://sbi-kyc-update.xyz/login and share the OTP to verify.' },
   { key: 'link', label: 'Link', icon: Link2, words: ['DOMAIN', 'LOOKALIKE', 'REDIRECT', 'SECURE?'],
-    steps: ['Reading the web address', 'Comparing against official brand websites', 'Checking for hidden redirects and look-alike letters', 'Preparing your result'],
+    steps: ['Reading', 'Official sites', 'Look-alikes'],
     sample: 'bit.ly/paytm-cashback-claim' },
   { key: 'contact', label: 'Phone / UPI', icon: Phone, words: ['FORMAT', 'COUNTRY', 'UPI NAME'],
-    steps: ['Reading the number or UPI ID', 'Checking country code and format', 'Looking for impersonation in the name', 'Preparing your result'],
+    steps: ['Reading', 'Country & format', 'Fake names'],
     sample: '+92 301 5557788' },
-  { key: 'wallet', label: 'Wallet address', icon: Wallet, words: ['REGISTRY', 'REPORTS', 'REVIEWS'],
-    steps: ['Validating the address', 'Reading the onchain threat registry', 'Matching community reports', 'Preparing your result'],
+  { key: 'wallet', label: 'Wallet', icon: Wallet, words: ['REGISTRY', 'REPORTS', 'REVIEWS'],
+    steps: ['Address', 'Registry', 'Reports'],
     sample: sampleAddress },
   { key: 'screenshot', label: 'Screenshot', icon: ImageIcon, words: ['READING', 'TEXT', 'SIGNALS'],
-    steps: ['Reading text from the image on your device', 'Looking for fear and urgency tactics', 'Checking for OTP, PIN or payment requests', 'Preparing your result'] },
+    steps: ['Reading the image', 'Pressure tactics', 'OTP or payment asks'] },
 ];
 
 const PLACEHOLDER = {
-  message: 'Paste the SMS, WhatsApp or email message here…',
-  link: 'Paste a link, e.g. https://example.com/offer',
-  contact: 'Phone number (+91 98…) or UPI ID (name@bank)',
+  message: 'Paste the message here…',
+  link: 'Paste a link',
+  contact: 'Phone (+91…) or UPI ID (name@bank)',
   wallet: '0x… wallet or contract address',
 };
 
@@ -215,7 +215,7 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
                 <span className="dropzone-name"><ImageIcon size={14} />{image.file.name} · tap to change</span>
               </>
             ) : (
-              <span className="dropzone-empty"><Upload size={22} /><b>Drop a screenshot or tap to choose</b><small>PNG or JPG of a message, chat or payment request</small></span>
+              <span className="dropzone-empty"><Upload size={22} /><b>Tap to add a screenshot</b></span>
             )}
           </label>
         ) : mode === 'message' ? (
@@ -229,7 +229,7 @@ export function ScamChecker({ initialMode = 'message', initialValue = '' }) {
         )}
 
         <p className="privacy-note"><Lock size={14} aria-hidden="true" />
-          Checked on this device — nothing you paste is uploaded or saved. Never paste OTPs, PINs, passwords or card numbers.
+          Stays on your device. Never paste OTPs, PINs or passwords.
         </p>
         {error && <p className="field-msg error" role="alert">{error}</p>}
 

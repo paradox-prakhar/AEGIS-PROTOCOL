@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { SpotlightNavbar } from './vengeance/spotlight-navbar';
 import { ScrollProgress } from './motion';
+import { AnimatedFooter } from './vengeance/animated-footer';
 import { CHAIN_NAME, FAUCET, explorerAddress } from '../chain';
 import { useWallet } from '../state/wallet';
 import { useRegistry } from '../state/registry';
@@ -38,7 +39,7 @@ export const NAV = [
 
 /** Routes shown in the floating desktop nav (the drawer holds everything). */
 export const PRIMARY = [
-  ['overview', 'Home'], ['scanner', 'Scam checker'], ['recovery', 'Get help'], ['cases', 'My cases'], ['learn', 'Learn'], ['help', 'Resources'],
+  ['overview', 'Home'], ['scanner', 'Check'], ['cases', 'My cases'], ['learn', 'Learn'], ['help', 'Helplines'],
 ];
 
 export const TITLES = Object.fromEntries(NAV.flatMap((g) => g.items.map(([k, t]) => [k, t])));
@@ -184,19 +185,14 @@ export function Layout({ path, children }) {
           </div>
         )}
         <main className="content" id="main" tabIndex={-1}>{children}</main>
-        <footer className="footer">
-          <div className="footer-brand">
-            <span className="brand-mark"><Shield size={16} /></span>
-            <div>
-              <b>Aegis Protocol</b>
-              <p>Calm, clear help before and after a scam. Arc Testnet prototype · not audited.</p>
-            </div>
+        <AnimatedFooter className="site-footer">
+          <div className="site-footer-top">
+            <nav className="footer-links" aria-label="Footer">
+              {[['scanner', 'Check'], ['recovery', 'Get help'], ['cases', 'My cases'], ['learn', 'Learn'], ['help', 'Helplines'], ['registry', 'Registry']].map(([k, label]) => <a key={k} href={`#/${k}`}>{label}</a>)}
+            </nav>
+            <p className="footer-note">We never ask for your OTP, PIN or password.</p>
           </div>
-          <nav className="footer-links" aria-label="Footer">
-            {NAV.slice(0, 2).flatMap((g) => g.items).map(([k, label]) => <a key={k} href={`#/${k}`}>{label}</a>)}
-          </nav>
-          <p className="footer-note">Aegis will never ask for your OTP, PIN, password or seed phrase. Reports are public allegations, not proof.</p>
-        </footer>
+        </AnimatedFooter>
       </div>
     </div>
   );

@@ -39,8 +39,8 @@ export default function Help() {
       <RevealGroup className="page-header" onMount>
         <div>
           <RevealItem calm className="eyebrow calm-eyebrow"><ShieldCheck size={14} /> Helplines & resources</RevealItem>
-          <SplitHeading lines={['Official help,', { text: 'without the guesswork.', className: 'grad' }]} />
-          <RevealItem calm as="p">Only verified, official contacts are listed here. If a number isn’t on this page or in your bank’s own app, treat it with caution.</RevealItem>
+          <SplitHeading lines={['Official help', { text: 'only.', className: 'grad' }]} />
+          <RevealItem calm as="p">Verified contacts only. Anything else — be careful.</RevealItem>
         </div>
       </RevealGroup>
 
@@ -53,8 +53,8 @@ export default function Help() {
           <Info size={22} />
           <div>
             <h3>Verified contacts are being added</h3>
-            <p>We only publish helplines after checking them on official government or company sources, so this list is empty for now.</p>
-            <p>Until then: <b>call your bank using the number on your card or in its official app</b>, and use your government’s official cybercrime reporting channels — find them by typing the official .gov address yourself, not through ads or messages.</p>
+            <p>We list a helpline only after checking it on an official source.</p>
+            <p><b>Until then:</b> call your bank on the number on your card, and type the official .gov cybercrime site yourself — never use numbers from ads or messages.</p>
           </div>
         </Reveal>
       )}
