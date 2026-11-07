@@ -1,0 +1,41 @@
+/* Tailwind v4 entry. Preflight is intentionally NOT imported: the existing
+   unlayered style.css owns base element styles, and Tailwind utilities live in
+   their own layer so they never fight it. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@source "../";
+
+/* The app is dark-only; Vengeance components use `dark:` variants, so map
+   them to the `.dark` class set on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  /* Minimal reset so Tailwind `border` utilities render like with preflight. */
+  *, ::before, ::after { border-width: 0; border-style: solid; border-color: var(--border); }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-solid: var(--surface-solid);
+  --color-line: var(--border);
+  --color-line-2: var(--border-2);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-safe: var(--safe);
+  --color-warn: var(--warning);
+  --color-danger: var(--danger);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --blur-glass: var(--blur);
+  --font-display: var(--font);
+  --font-mono: var(--mono);
+  --ease-out: var(--ease-out);
+  --ease-calm: var(--ease-calm);
+}
