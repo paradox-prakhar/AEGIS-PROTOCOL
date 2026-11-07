@@ -1,0 +1,25 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "AegisReportStake.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.38;\nimport {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';\nimport {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';\nimport {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';\nimport {ReentrancyGuard} from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';\ninterface IAegisV2 {\n struct Report {address reporter;address subject;bytes32 evidenceHash;uint64 createdAt;uint64 resolvedAt;uint32 challengeCount;uint8 status;}\n function VERSION() external view returns(uint256);\n function reports(uint256 id) external view returns(Report memory);\n}\n/// @notice Testnet-only, unaudited companion staking pool. Trusted registry decisions determine payouts.\ncontract AegisReportStake is ReentrancyGuard {\n using SafeERC20 for IERC20;\n IAegisV2 public immutable registry;\n IERC20 public immutable token;\n uint256 public constant TIMEOUT=30 days;\n uint256 public constant MIN_STAKE=1e6;\n struct Pool{uint256 yes;uint256 no;bool refundMode;}\n struct Position{uint256 yes;uint256 no;bool claimed;}\n mapping(uint256=>Pool)public pools;\n mapping(uint256=>mapping(address=>Position))public positions;\n event Staked(uint256 indexed reportId,address indexed user,bool support,uint256 amount);\n event Claimed(uint256 indexed reportId,address indexed user,uint256 amount,bool refund);\n constructor(address registry_,address token_){require(registry_!=address(0)&&token_!=address(0),'zero address');registry=IAegisV2(registry_);require(registry.VERSION()==2,'v2 required');require(IERC20Metadata(token_).decimals()==6,'6 decimals required');token=IERC20(token_);}\n function stake(uint256 id,bool support,uint256 amount)external nonReentrant{\n  IAegisV2.Report memory report=registry.reports(id);require(report.status<2,'closed');require(block.timestamp<uint256(report.createdAt)+TIMEOUT,'expired');require(amount>=MIN_STAKE,'minimum 1 USDC');Pool storage p=pools[id];require(!p.refundMode,'refunding');Position storage position=positions[id][msg.sender];require(!position.claimed,'claimed');\n  uint256 beforeBalance=token.balanceOf(address(this));token.safeTransferFrom(msg.sender,address(this),amount);require(token.balanceOf(address(this))-beforeBalance==amount,'unsupported fee token');\n  if(support){p.yes+=amount;position.yes+=amount;}else{p.no+=amount;position.no+=amount;}emit Staked(id,msg.sender,support,amount);\n }\n function claim(uint256 id)external nonReentrant{\n  IAegisV2.Report memory report=registry.reports(id);Pool storage p=pools[id];Position storage position=positions[id][msg.sender];require(!position.claimed&&position.yes+position.no>0,'no claim');\n  if(report.status<2){require(block.timestamp>=uint256(report.createdAt)+TIMEOUT,'not resolved');p.refundMode=true;}\n  uint256 winningTotal=report.status==2?p.yes:p.no;bool refund=p.refundMode||winningTotal==0;\n  uint256 amount=refund?position.yes+position.no:(report.status==2?position.yes:position.no)*(p.yes+p.no)/winningTotal;\n  position.claimed=true;if(amount>0)token.safeTransfer(msg.sender,amount);emit Claimed(id,msg.sender,amount,refund);\n }\n}\r\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "metadata"
+        ]
+      }
+    }
+  }
+}

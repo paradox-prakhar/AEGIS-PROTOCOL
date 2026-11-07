@@ -7,15 +7,16 @@
     "dev": "vite --host 127.0.0.1",
     "build": "npm run contracts:compile && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/risk.test.js src/arkiv-validation.test.js src/test-report.test.js",
+    "test": "node --test src/risk.test.js src/arkiv-validation.test.js src/test-report.test.js src/incident-crypto.test.js",
     "contracts:compile": "node scripts/compile.mjs",
-    "test:contracts": "node --test scripts/contracts.test.mjs",
+    "test:contracts": "node --test scripts/contracts.test.mjs scripts/staking.test.mjs",
     "test:all": "npm test && npm run test:contracts",
     "deploy:check": "node scripts/deployment-check.mjs",
     "deploy:verify": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
-    "@arkiv-network/sdk": "^1.0.1",
+    "@arkiv-network/sdk": "1.0.1",
+    "@openzeppelin/contracts": "^5.6.1",
     "ethers": "^6.17.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
@@ -23,11 +24,15 @@
     "viem": "^2.57.16"
   },
   "devDependencies": {
-    "ganache": "^7.9.2",
+    "hardhat": "^3.21.2",
     "solc": "0.8.38",
     "vite": "^6.1.0"
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "tmp": "^0.2.7",
+    "zod": "^4.6.6"
   }
 }

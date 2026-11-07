@@ -33,7 +33,7 @@ export function rememberRegistry(address) {
 
 let readProvider;
 function reader() {
-  readProvider ??= new JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true, batchMaxCount: 20 });
+  readProvider ??= new JsonRpcProvider(RPC, CHAIN_ID, { batchMaxCount: 20 });
   return readProvider;
 }
 
@@ -75,7 +75,7 @@ export async function registryVersion(address) {
   const provider = reader();
   if ((await provider.getCode(address)) === '0x') throw new Error('No contract is deployed at this registry address on Arc Testnet.');
   let version = 1;
-  try { version = Number(await new Contract(address, artifact.abi, provider).VERSION()); } catch { version = 1; }
+  try { version = Number(await new Contract(address, artifact.abi, provider).VERSION()); } catch (error) { if(error.code!=='CALL_EXCEPTION')throw error;version = 1; }
   versionCache.set(key, version);
   return version;
 }

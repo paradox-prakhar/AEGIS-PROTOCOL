@@ -47,7 +47,7 @@ export default function ArkivReports(){
      {review.simulated&&<p className="mono">Expected signing wallet: {TEST_REPORTER}</p>}
      <p>Arc Testnet · 5042002. Initial status after confirmation: PENDING REVIEW. No asset transfer; test USDC pays gas.</p>
      <p>Arkiv Rabdi · 7794095. Entity reference: NOT CREATED. After its separate transaction confirms, the Arkiv record will link to the Arc report ID, receipt and this exact evidence hash.</p>
-     <p>The current v1 Arc registry stores the evidence hash, not an Arkiv URI or test flag. TEST labels are contained in the evidence.</p>
+     <p>The Arc registration commits the evidence hash. TEST labels are contained in the evidence; the Arkiv record links back to the Arc report and receipt.</p>
      <details><summary>Read the exact evidence to be published</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{review.evidence}</pre></details>
      <button className="secondary" onClick={()=>download('aegis-unsigned-review.json',{label:review.simulated?'TEST / SIMULATED':'REPORT',unsigned:true,...review,arkivEntityReference:null,arcTransactionHash:null,proposedStatus:'PENDING REVIEW'})}>Download unsigned review</button>
      <label><input style={{width:'auto',marginRight:8}} type="checkbox" checked={arcConsent} disabled={busy||!!draft} onChange={e=>setArcConsent(e.target.checked)}/>I reviewed this exact report and want to request the Arc transaction.</label>
