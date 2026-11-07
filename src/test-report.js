@@ -2,6 +2,9 @@ import { keccak256, toUtf8Bytes } from 'ethers';
 
 export const TEST_SUBJECT = '0x1111111111111111111111111111111111111111';
 export const TEST_REPORTER = '0x2Df43B66A31cd93792E4a32Af494b5a18c614148';
+// Testnet-only wallets allowed to sign TEST / SIMULATED reports.
+export const TEST_REPORTERS = [TEST_REPORTER, '0x4b69354392efc69c54e61e548704bbf3a0e829ff'];
+export const isTestReporter = (address) => TEST_REPORTERS.some((a) => a.toLowerCase() === String(address).toLowerCase());
 export const SYNTHETIC_TX_SEED = 'AEGIS PROTOCOL / TEST ONLY / SIMULATED PHISHING / 2026-11-06 / 001';
 
 export const TEST_EVIDENCE = {
