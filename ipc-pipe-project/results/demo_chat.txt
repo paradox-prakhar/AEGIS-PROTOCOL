@@ -1,0 +1,15 @@
+
+===== Demo 8: Interactive chat with the child process =====
+Type a message and press Enter. The child replies in upper case.
+Type 'exit' (or press Ctrl+D) to finish.
+message> [CHILD  1766] received request: "hello from the keyboard"
+[CHILD  1766] sent reply:       "HELLO FROM THE KEYBOARD"
+[PARENT 1765] child replied: "HELLO FROM THE KEYBOARD"
+message> [PARENT 1765] invalid input: empty message, type some text
+message> [CHILD  1766] received request: "operating systems lab"
+[CHILD  1766] sent reply:       "OPERATING SYSTEMS LAB"
+[PARENT 1765] child replied: "OPERATING SYSTEMS LAB"
+message> [CHILD  1766] EOF on request pipe, served 2 request(s)
+[PARENT 1765] child 1766 finished with exit status 0 (no zombie)
+===== Demo 8 completed successfully =====
+exit status: 0

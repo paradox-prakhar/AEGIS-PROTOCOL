@@ -11,8 +11,8 @@ mkdir -p results
 } > results/environment.txt
 
 # Clean rebuild so that every compiler message (if any) is captured.
-make clean > /dev/null
-make ipc_pipe > results/build_log.txt 2>&1
+make --no-print-directory clean > /dev/null
+make --no-print-directory ipc_pipe > results/build_log.txt 2>&1
 echo "make exit status: $?" >> results/build_log.txt
 make $(ls tests/test_*.c | sed 's|tests/\(.*\)\.c|build/\1|') >> /dev/null 2>&1
 

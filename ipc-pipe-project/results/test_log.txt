@@ -1,0 +1,47 @@
+== Unit tests ==
+PASS bidirectional            (17 checks, 0 failed)
+PASS child_to_parent          (16 checks, 0 failed)
+PASS eof_closed_pipe          (27 checks, 0 failed)
+PASS invalid_input            (32 checks, 0 failed)
+PASS multiple_messages        (15 checks, 0 failed)
+PASS parent_to_child          (10 checks, 0 failed)
+PASS pipe_setup               (21 checks, 0 failed)
+PASS syscall_errors           (28 checks, 0 failed)
+
+== Integration test ==
+  ok   - demo 1 exits with status 0
+  ok   - demo 2 exits with status 0
+  ok   - demo 3 exits with status 0
+  ok   - demo 4 exits with status 0
+  ok   - demo 5 exits with status 0
+  ok   - demo 6 exits with status 0
+  ok   - demo 7 exits with status 0
+  ok   - all demos in one run
+  ok   - summary line
+  ok   - demo 1: child received the parent's message
+  ok   - demo 2: parent received the child's message
+  ok   - demo 3: reply came back on the second pipe
+  ok   - demo 4: custom messages
+  ok   - demo 5: checksum matches
+  ok   - demo 6: child saw EOF
+  ok   - demo 7: EPIPE reported
+  ok   - demo 8: chat reply
+  ok   - demo 8: empty line rejected
+  ok   - demo 8: ends cleanly at end of input
+  ok   - demo 8: over-long line rejected
+  ok   - menu: choice 1 runs demo 1
+  ok   - menu: bad choice rejected
+  ok   - rejects demo number 0
+  ok   - rejects demo number 99
+  ok   - rejects non-numeric demo
+  ok   - rejects trailing garbage (3abc)
+  ok   - rejects empty message
+  ok   - rejects over-long message
+  ok   - rejects messages for other demos
+  ok   - --help works
+  ok   - no ipc_pipe process left running
+  ok   - no zombie ipc_pipe process
+PASS integration              (32 checks, 0 failed)
+
+RESULT: all 9 test programs passed
+exit status: 0

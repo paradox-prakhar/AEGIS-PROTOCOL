@@ -1,0 +1,9 @@
+mkdir -p build
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/main.c -o build/main.o
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/ipc_utils.c -o build/ipc_utils.o
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/pipe_setup.c -o build/pipe_setup.o
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/parent_process.c -o build/parent_process.o
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/child_process.c -o build/child_process.o
+gcc -Wall -Wextra -pedantic -std=c11 -g -c src/scenarios.c -o build/scenarios.o
+gcc -Wall -Wextra -pedantic -std=c11 -g build/main.o build/ipc_utils.o build/pipe_setup.o build/parent_process.o build/child_process.o build/scenarios.o -o ipc_pipe
+make exit status: 0

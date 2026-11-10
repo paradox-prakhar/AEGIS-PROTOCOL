@@ -1,0 +1,91 @@
+
+===== Demo 1: Unidirectional: parent -> child (one pipe) =====
+[PARENT 1756] pipe created: read end = fd 3, write end = fd 4
+[PARENT 1756] sent message 1: "Hello child, this is your parent"
+[CHILD  1757] waiting for data (read() blocks while the pipe is empty)
+[CHILD  1757] received message 1: "Hello child, this is your parent"
+[CHILD  1757] read() returned 0 -> EOF, parent closed its write end
+[PARENT 1756] child 1757 finished with exit status 0 (no zombie)
+===== Demo 1 completed successfully =====
+
+===== Demo 2: Unidirectional: child -> parent (one pipe) =====
+[CHILD  1758] sent message 1: "Hello parent, I am child PID 1758"
+[CHILD  1758] sent message 2: "My parent is PID 1756"
+[CHILD  1758] sent message 3: "Child work finished"
+[PARENT 1756] received message 1: "Hello parent, I am child PID 1758"
+[PARENT 1756] received message 2: "My parent is PID 1756"
+[PARENT 1756] received message 3: "Child work finished"
+[PARENT 1756] read() returned 0 -> EOF, child closed its write end
+[PARENT 1756] child 1758 finished with exit status 0 (no zombie)
+===== Demo 2 completed successfully =====
+
+===== Demo 3: Bidirectional: request and reply (two pipes) =====
+[PARENT 1756] pipe 1 (parent->child): read fd 3, write fd 4
+[PARENT 1756] pipe 2 (child->parent): read fd 5, write fd 6
+[PARENT 1756] sent request 1: "hello from the parent process"
+[CHILD  1759] received request: "hello from the parent process"
+[CHILD  1759] sent reply:       "HELLO FROM THE PARENT PROCESS"
+[PARENT 1756] got reply   1: "HELLO FROM THE PARENT PROCESS" (verified)
+[CHILD  1759] EOF on request pipe, served 1 request(s)
+[PARENT 1756] child 1759 finished with exit status 0 (no zombie)
+===== Demo 3 completed successfully =====
+
+===== Demo 4: Multiple messages in both directions =====
+[PARENT 1756] pipe 1 (parent->child): read fd 3, write fd 4
+[PARENT 1756] pipe 2 (child->parent): read fd 5, write fd 6
+[PARENT 1756] sent request 1: "operating systems"
+[CHILD  1760] received request: "operating systems"
+[CHILD  1760] sent reply:       "OPERATING SYSTEMS"
+[PARENT 1756] got reply   1: "OPERATING SYSTEMS" (verified)
+[PARENT 1756] sent request 2: "inter-process communication"
+[CHILD  1760] received request: "inter-process communication"
+[CHILD  1760] sent reply:       "INTER-PROCESS COMMUNICATION"
+[PARENT 1756] got reply   2: "INTER-PROCESS COMMUNICATION" (verified)
+[PARENT 1756] sent request 3: "pipes are unidirectional"
+[CHILD  1760] received request: "pipes are unidirectional"
+[CHILD  1760] sent reply:       "PIPES ARE UNIDIRECTIONAL"
+[PARENT 1756] got reply   3: "PIPES ARE UNIDIRECTIONAL" (verified)
+[PARENT 1756] sent request 4: "two pipes give two-way communication"
+[CHILD  1760] received request: "two pipes give two-way communication"
+[CHILD  1760] sent reply:       "TWO PIPES GIVE TWO-WAY COMMUNICATION"
+[PARENT 1756] got reply   4: "TWO PIPES GIVE TWO-WAY COMMUNICATION" (verified)
+[PARENT 1756] sent request 5: "last message"
+[CHILD  1760] received request: "last message"
+[CHILD  1760] sent reply:       "LAST MESSAGE"
+[PARENT 1756] got reply   5: "LAST MESSAGE" (verified)
+[CHILD  1760] EOF on request pipe, served 5 request(s)
+[PARENT 1756] child 1760 finished with exit status 0 (no zombie)
+===== Demo 4 completed successfully =====
+
+===== Demo 5: Bulk data transfer (1 MiB) with checksum =====
+[PARENT 1756] sending 1048576 bytes through a 64 KiB pipe buffer
+[PARENT 1756] wrote 1048576 bytes, checksum 133693440
+[CHILD  1761] read  1048576 bytes, checksum 133693440
+[PARENT 1756] child reports "bytes=1048576 checksum=133693440" -> matches, transfer verified
+[PARENT 1756] child 1761 finished with exit status 0 (no zombie)
+===== Demo 5 completed successfully =====
+
+===== Demo 6: Blocking read, EOF and wait() synchronization =====
+[PARENT 1756] sleeping 1 second; the child is blocked in read()
+[CHILD  1762] waiting for data (read() blocks while the pipe is empty)
+[PARENT 1756] sent message 1: "first"
+[PARENT 1756] sent message 2: "second"
+[PARENT 1756] sent message 3: "third"
+[PARENT 1756] closing the write end -> child will see EOF
+[PARENT 1756] calling waitpid(); blocks until the child exits
+[CHILD  1762] received message 1: "first"
+[CHILD  1762] received message 2: "second"
+[CHILD  1762] received message 3: "third"
+[CHILD  1762] read() returned 0 -> EOF, parent closed its write end
+[PARENT 1756] child 1762 finished with exit status 0 (no zombie)
+===== Demo 6 completed successfully =====
+
+===== Demo 7: Broken pipe: writing when no reader exists (EPIPE) =====
+[CHILD  1763] closed the read end without reading, exiting
+[PARENT 1756] child 1763 finished with exit status 0 (no zombie)
+[PARENT 1756] writing although every read end is closed...
+[PARENT 1756] write() failed with EPIPE (Broken pipe) as expected
+===== Demo 7 completed successfully =====
+
+Summary: 7 of 7 demonstrations succeeded
+exit status: 0
