@@ -1,0 +1,13 @@
+# Generated executables and object files are never committed
+ipc_pipe
+build/
+*.o
+*.out
+a.out
+
+# Editor / OS leftovers
+*.swp
+*~
+.vscode/
+.DS_Store
+core
