@@ -4,7 +4,7 @@ import {defineSchema,str,bytes} from '@arkiv-network/sdk/schema';
 import {eq,and,asc} from '@arkiv-network/sdk/query';
 import {http,custom,stringToBytes,hexToString} from 'viem';
 import {verifyReportBinding} from './arkiv-validation';
-import {isSimulatedEvidence,TEST_REPORTER} from './test-report';
+import {isSimulatedEvidence,TEST_REPORTERS,isTestReporter} from './test-report';
 import {activeRegistry,arkivRegistry as registry,sendRegistryTx,evidenceHash} from './chain';
 export const arkivChain=rabdi({accessKey:import.meta.env.VITE_ARKIV_ACCESS_KEY||''});
 export const Reports=defineSchema('aegis.arc.scam-reports.v1',{registry:str().indexed(),subject:str().indexed(),arcTx:str().indexed(),reportId:str(),hash:str(),evidence:bytes()});
@@ -33,7 +33,7 @@ export async function searchReports(subject='',offset=0){
 }
 export async function submitArcReport(subject,evidence){
  const c=await registry(activeRegistry(),true);const hash=evidenceHash(evidence);
- if(isSimulatedEvidence(evidence)&&(await c.runner.getAddress()).toLowerCase()!==TEST_REPORTER.toLowerCase())throw Error('Select the reviewed TEST reporting wallet '+TEST_REPORTER);
+ if(isSimulatedEvidence(evidence)&&!isTestReporter(await c.runner.getAddress()))throw Error('Select a reviewed TEST reporting wallet: '+TEST_REPORTERS.join(' or '));
  const receipt=await sendRegistryTx(activeRegistry(),'submit',[subject,hash,'']);if(receipt.status!==1)throw Error('Arc transaction reverted.');
  for(const log of receipt.logs){if(log.address.toLowerCase()!==activeRegistry().toLowerCase())continue;try{const event=c.interface.parseLog(log);if(event?.name==='Submitted')return {subject,evidence,reportId:event.args.id.toString(),arcTx:receipt.hash}}catch{}}
  throw Error('No report event found. Check your wallet transaction before retrying.');

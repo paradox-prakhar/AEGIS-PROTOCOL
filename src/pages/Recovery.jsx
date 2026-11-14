@@ -18,35 +18,35 @@ const CATEGORIES = ['Approval phishing', 'Address poisoning', 'Rug pull', 'Imper
 const STEPS = [
   {
     id: 'stop', title: 'Stop all contact and payments',
-    lead: 'You have done nothing wrong by pausing. Scammers often push for “one last payment”.',
-    items: ['Do not send more money, even if they promise a refund or threaten you.', 'Do not share any OTP, PIN, password or seed phrase.', 'Stop any screen-sharing or remote-access app (AnyDesk, TeamViewer) and uninstall it.'],
+    lead: 'Scammers often push for “one last payment”.',
+    items: ['Send no more money.', 'Share no OTP, PIN, password or seed phrase.', 'Uninstall screen-sharing apps (AnyDesk, TeamViewer).'],
   },
   {
     id: 'secure', title: 'Secure your money',
-    lead: 'The sooner your bank or wallet knows, the better the chance to stop or trace a payment.',
-    items: ['Call your bank using the number printed on your card or in its official app, and ask them to block cards, UPI and net banking.', 'Crypto: revoke token approvals given to the scammer, from a clean device.', 'Move any unaffected funds to a fresh wallet with a new seed phrase.'],
+    lead: 'The sooner your bank knows, the better.',
+    items: ['Call your bank (number on your card or official app). Block cards, UPI and net banking.', 'Crypto: revoke approvals and move safe funds to a new wallet.'],
   },
   {
     id: 'report', title: 'Report it officially',
-    lead: 'Reporting quickly matters — some payments can still be held in the first hours.',
-    items: ['Report to the official national cybercrime channels listed on our Helplines & resources page.', 'Keep the complaint or acknowledgement number you receive.'],
-    link: ['#/help', 'Open helplines & resources'],
+    lead: 'Report fast — payments can sometimes be held.',
+    items: ['Use the official cybercrime channels on our Helplines page.', 'Keep your complaint number.'],
+    link: ['#/help', 'Open helplines'],
   },
   {
     id: 'evidence', title: 'Save your evidence',
-    lead: 'A clear record helps your bank, the police and the issuer of any stolen tokens.',
-    items: ['Screenshot the chats, profiles, numbers and websites involved.', 'Note transaction IDs, UTR numbers or transaction hashes and the time of each payment.', 'Open an incident below — it stays in this browser and can be exported.'],
+    lead: 'A clear record helps your bank and the police.',
+    items: ['Screenshot chats, numbers and websites.', 'Note transaction IDs / UTR numbers and times.', 'Save it as an incident below.'],
     link: ['#incident', 'Open an incident'],
   },
   {
     id: 'protect', title: 'Protect your accounts',
-    lead: 'Scammers sometimes come back, or sell your details to others.',
-    items: ['Change passwords for email, banking and social accounts. Turn on two-step verification.', 'Check that your email and phone number on bank accounts were not changed.', 'Tell family and friends so they can ignore messages “from you”.'],
+    lead: 'Scammers sometimes come back.',
+    items: ['Change passwords and turn on two-step verification.', 'Warn family and friends.'],
   },
   {
     id: 'care', title: 'Look after yourself',
-    lead: 'Being scammed is upsetting, and it happens to careful people too.',
-    items: ['Talk to someone you trust about what happened.', 'Be wary of anyone who offers to “recover” your money for a fee — that is a second scam.'],
+    lead: 'It happens to careful people too.',
+    items: ['Talk to someone you trust.', 'Paid “recovery agents” are a second scam.'],
   },
 ];
 
@@ -121,11 +121,11 @@ export default function Recovery() {
     <div className="calm">
       <RevealGroup className="calm-hero" onMount gap={0.16}>
         <RevealItem calm className="eyebrow calm-eyebrow"><HeartHandshake size={14} /> Emergency help</RevealItem>
-        <RevealItem calm as="h1">You’re not alone. Let’s take this one step at a time.</RevealItem>
-        <RevealItem calm as="p">Work through these steps in order. Tick each one when you’re done — your progress is saved on this device only.</RevealItem>
+        <RevealItem calm as="h1">You’re not alone.</RevealItem>
+        <RevealItem calm as="p">One step at a time. Tick each one when done.</RevealItem>
         <RevealItem calm className="calm-hero-actions">
-          <a className="btn btn-calm btn-lg" href="#/help"><Phone size={17} />Find official helplines</a>
-          <a className="btn btn-ghost btn-lg" href="#/cases"><ListChecks size={17} />Track my cases</a>
+          <a className="btn btn-calm btn-lg" href="#/help"><Phone size={17} />Helplines</a>
+          <a className="btn btn-ghost btn-lg" href="#/cases"><ListChecks size={17} />My cases</a>
         </RevealItem>
       </RevealGroup>
 
@@ -134,8 +134,8 @@ export default function Recovery() {
           <header className="calm-progress">
             <ProgressRing done={done} total={STEPS.length} />
             <div>
-              <h2 id="steps-title">Your recovery checklist</h2>
-              <p className="muted">{done === STEPS.length ? 'Every step is done. Thank you for taking care of this.' : `${STEPS.length - done} step${STEPS.length - done === 1 ? '' : 's'} left. There’s no rush — just keep going.`}</p>
+              <h2 id="steps-title">Your checklist</h2>
+              <p className="muted">{done === STEPS.length ? 'All done.' : `${STEPS.length - done} left — no rush.`}</p>
             </div>
           </header>
           <ol className="calm-steps">

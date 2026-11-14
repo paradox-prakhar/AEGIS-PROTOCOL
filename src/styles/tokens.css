@@ -5,42 +5,50 @@
    resolve to the same values.
    ========================================================================== */
 :root {
-  /* Base */
-  --bg: #05060a;
-  --bg-2: #080a10;
-  --surface: rgba(14, 18, 27, 0.72);      /* glass panel */
-  --surface-solid: #0d1119;
-  --surface-2: rgba(22, 28, 40, 0.78);
-  --surface-3: #1b2232;
-  --border: rgba(148, 170, 200, 0.12);     /* thin 1px glass edge */
-  --border-2: rgba(148, 170, 200, 0.2);
+  /* Base — white & blue */
+  --bg: #ffffff;
+  --bg-2: #f5f8ff;
+  --surface: rgba(255, 255, 255, 0.86);   /* frosted white panel */
+  --surface-solid: #ffffff;
+  --surface-2: #f3f6fd;
+  --surface-3: #e6edf9;
+  --border: #e3e9f4;
+  --border-2: #cfdaee;
+  --well: #f6f8fd;                         /* inputs, tabs, inset wells */
+  --overlay: rgba(255, 255, 255, 0.78);    /* floating nav */
+  --scrim-bg: rgba(15, 23, 42, 0.28);
+  --shadow-rgb: 30, 58, 138;
 
-  /* Text — all ≥ 4.5:1 on --bg (AA) */
-  --text: #eef3f8;
-  --text-2: #b4c0cf;
-  --text-3: #8592a4;
+  /* Text — all ≥ 4.5:1 on white (AA) */
+  --text: #0b1b3a;
+  --text-2: #3f5072;
+  --text-3: #5d6c87;
 
-  /* Brand: teal = trust (primary), violet = secondary */
-  --accent: #2de2e6;
-  --accent-rgb: 45, 226, 230;
-  --accent-2: #8b7cff;
-  --accent-2-rgb: 139, 124, 255;
-  --accent-ink: #021a1b;
-  --accent-soft: rgba(45, 226, 230, 0.1);
+  /* Brand: blue = trust (primary), sky = secondary */
+  --accent: #2563eb;
+  --accent-rgb: 37, 99, 235;
+  --accent-2: #0ea5e9;
+  --accent-2-rgb: 14, 165, 233;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(37, 99, 235, 0.08);
 
   /* Semantic status — used consistently: safe / suspicious / danger */
-  --safe: #34d399;
-  --safe-rgb: 52, 211, 153;
-  --safe-soft: rgba(52, 211, 153, 0.1);
-  --warning: #fbbf24;
-  --warning-rgb: 251, 191, 36;
-  --warning-soft: rgba(251, 191, 36, 0.1);
-  --danger: #f87171;
-  --danger-rgb: 248, 113, 113;
-  --danger-soft: rgba(248, 113, 113, 0.1);
-  --info: #7cb6ff;
-  --info-soft: rgba(124, 182, 255, 0.1);
-  --neutral-soft: rgba(180, 192, 207, 0.08);
+  --safe: #047857;
+  --safe-rgb: 4, 120, 87;
+  --safe-soft: rgba(4, 120, 87, 0.08);
+  --warning: #b45309;
+  --warning-rgb: 180, 83, 9;
+  --warning-soft: rgba(180, 83, 9, 0.08);
+  --danger: #dc2626;
+  --danger-rgb: 220, 38, 38;
+  --danger-soft: rgba(220, 38, 38, 0.07);
+  /* Calm (emergency flow, help links): the same trust blue, never alarm colours */
+  --calm: #2563eb;
+  --calm-rgb: 37, 99, 235;
+  --info: #2563eb;
+  --info-rgb: 37, 99, 235;
+  --info-soft: rgba(37, 99, 235, 0.07);
+  --neutral-soft: rgba(93, 108, 135, 0.08);
 
   /* Radii */
   --radius-xs: 6px;
@@ -52,9 +60,9 @@
   /* Glass, glow, shadow */
   --blur: 14px;
   --blur-lg: 24px;
-  --glow: 0 0 0 1px rgba(var(--accent-rgb), 0.18), 0 8px 40px -12px rgba(var(--accent-rgb), 0.45);
-  --glow-soft: 0 0 40px -10px rgba(var(--accent-rgb), 0.35);
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+  --glow: 0 8px 24px -10px rgba(var(--accent-rgb), 0.45);
+  --glow-soft: 0 0 40px -14px rgba(var(--accent-rgb), 0.3);
+  --shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.05), 0 12px 32px -18px rgba(var(--shadow-rgb), 0.22);
 
   /* Spacing scale (4px base) */
   --space-1: 4px;
@@ -83,5 +91,5 @@
   --nav-h: 64px;
   --content-max: 1240px;
 
-  color-scheme: dark;
+  color-scheme: light;
 }

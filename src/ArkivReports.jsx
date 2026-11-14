@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {isAddress} from 'ethers';
 import {submitArcReport,publishReport,searchReports,arkivChain} from './arkiv';
 import {EXPLORER,activeRegistry,evidenceHash} from './chain';
-import {TEST_SUBJECT,TEST_REPORTER,TEST_EVIDENCE_TEXT,isSimulatedEvidence} from './test-report';
+import {TEST_SUBJECT,TEST_REPORTERS,TEST_EVIDENCE_TEXT,isSimulatedEvidence} from './test-report';
 
 function download(name,value){
  const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
@@ -44,7 +44,7 @@ export default function ArkivReports(){
      <h3>{review.simulated?'TEST / SIMULATED — unsigned review':'Unsigned report review'}</h3>
      {review.simulated&&<p>No real victim or scam allegation. The mock transaction hash is fictional and is not a receipt.</p>}
      <p className="mono">Subject: {review.subject}<br/>Registry: {review.registry}<br/>Evidence hash: {review.hash}</p>
-     {review.simulated&&<p className="mono">Expected signing wallet: {TEST_REPORTER}</p>}
+     {review.simulated&&<p className="mono">Expected signing wallet: {TEST_REPORTERS.join(' or ')}</p>}
      <p>Arc Testnet · 5042002. Initial status after confirmation: PENDING REVIEW. No asset transfer; test USDC pays gas.</p>
      <p>Arkiv Rabdi · 7794095. Entity reference: NOT CREATED. After its separate transaction confirms, the Arkiv record will link to the Arc report ID, receipt and this exact evidence hash.</p>
      <p>The Arc registration commits the evidence hash. TEST labels are contained in the evidence; the Arkiv record links back to the Arc report and receipt.</p>

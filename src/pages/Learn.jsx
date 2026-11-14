@@ -115,9 +115,9 @@ const TYPES = [
 }));
 
 const RULES = [
-  ['Pause', 'Scams rely on panic. Any message that rushes you is a reason to slow down.'],
-  ['Never share codes', 'No real bank, company or officer will ask for your OTP, PIN or password.'],
-  ['Verify yourself', 'Call back using a number from the official app or website — never the one in the message.'],
+  ['Pause', 'Rushing you is a red flag.'],
+  ['Never share codes', 'No bank asks for your OTP or PIN.'],
+  ['Verify yourself', 'Use the number in the official app.'],
 ];
 
 export default function Learn() {
@@ -125,9 +125,8 @@ export default function Learn() {
     <>
       <RevealGroup className="page-header" onMount>
         <div>
-          <RevealItem className="eyebrow">Learn</RevealItem>
-          <SplitHeading lines={['Know the tricks,', { text: 'and they stop working.', className: 'grad' }]} />
-          <RevealItem as="p">The most common scams in India, explained simply. Tap a card to see the warning signs and what to do.</RevealItem>
+                    <SplitHeading lines={['Know the tricks.', { text: 'Stay safe.', className: 'grad' }]} />
+          <RevealItem as="p">Tap a card to learn the signs.</RevealItem>
         </div>
       </RevealGroup>
 
@@ -135,7 +134,7 @@ export default function Learn() {
       <ExpandableBentoGrid items={TYPES} />
 
       <Reveal className="card rules-card">
-        <h2>Three rules that stop most scams</h2>
+        <h2>Three rules</h2>
         <ol className="rules">
           {RULES.map(([t, d], i) => (
             <li key={t}><span className="mono">0{i + 1}</span><div><b>{t}</b><p>{d}</p></div></li>
