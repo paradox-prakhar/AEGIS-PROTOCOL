@@ -10,6 +10,7 @@ const SETTINGS = {
   outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object', 'evm.deployedBytecode.object'] } },
 };
 
+// Sources are normalized to LF so artifacts (embedded source, bytecode metadata hash) are identical on Windows and Linux.
 const targets = [
   {name:'AegisReportStake',file:'contracts/AegisReportStake.sol',unit:'AegisReportStake.sol',out:'src/stake-artifact.json',version:'stake'},
   {name:'MockUSDC',file:'contracts/MockUSDC.sol',unit:'MockUSDC.sol',out:'artifacts/mock-usdc.json',version:'mock'},
@@ -19,7 +20,7 @@ const targets = [
 
 fs.mkdirSync('artifacts', { recursive: true });
 for (const t of targets) {
-  const input = { language: 'Solidity', sources: { [t.unit]: { content: fs.readFileSync(t.file, 'utf8') } }, settings: SETTINGS };
+  const input = { language: 'Solidity', sources: { [t.unit]: { content: fs.readFileSync(t.file, 'utf8').replace(/\r\n/g, '\n') } }, settings: SETTINGS };
   const output = JSON.parse(solc.compile(JSON.stringify(input),{import:filename=>{try{return {contents:fs.readFileSync('node_modules/'+filename,'utf8')}}catch{return {error:'Import not found: '+filename}}}}));
   const errors = (output.errors || []).filter((e) => e.severity === 'error');
   if (errors.length) throw new Error(errors.map((e) => e.formattedMessage).join('\n'));
