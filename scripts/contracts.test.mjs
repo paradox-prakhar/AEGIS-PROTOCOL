@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import ganache from 'ganache';
+import {network} from 'hardhat';
 import { BrowserProvider, ContractFactory, ZeroAddress, ZeroHash, keccak256, toUtf8Bytes } from 'ethers';
 
 const v2 = JSON.parse(fs.readFileSync('src/registry-artifact.json', 'utf8'));
@@ -11,7 +11,8 @@ const DAY = 86400;
 const Status = { Pending: 0n, Challenged: 1n, Confirmed: 2n, Rejected: 3n };
 
 async function setup(artifact = v2) {
-  const rpc = ganache.provider({ logging: { quiet: true }, chain: { hardfork: 'merge' } });
+  const connection = await network.create('local');
+  const rpc = {request:args=>connection.provider.request(args),disconnect:()=>connection.close()};
   const provider = new BrowserProvider(rpc);
   const [reviewer, reporter, challenger, subject, other] = await Promise.all([0, 1, 2, 3, 4].map((i) => provider.getSigner(i)));
   const c = await new ContractFactory(artifact.abi, artifact.bytecode, reviewer).deploy(await reviewer.getAddress());

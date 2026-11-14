@@ -14,12 +14,8 @@ export async function publishReport(draft){
  const receipt=await c.runner.getTransactionReceipt(draft.arcTx);
  if(!receipt||receipt.status!==1||!receipt.logs.some(log=>{try{const event=c.interface.parseLog(log);return log.address.toLowerCase()===activeRegistry().toLowerCase()&&event?.name==='Submitted'&&event.args.id===BigInt(draft.reportId)}catch{return false}}))throw Error('The Arc receipt does not contain this report.');
  if(report.subject.toLowerCase()!==draft.subject.toLowerCase()||report.evidenceHash!==evidenceHash(draft.evidence))throw Error('Evidence does not match the Arc report.');
- if(!window.ethereum)throw Error('Install MetaMask.');
- const [account]=await window.ethereum.request({method:'eth_requestAccounts'});
+ const wallet=await getArkivWallet();const account=wallet.account.address;
  if(account.toLowerCase()!==report.reporter.toLowerCase())throw Error('Use the wallet that submitted this Arc report.');
- const wallet=createWalletClient({chain:arkivChain,transport:custom(window.ethereum),account});
- try{await wallet.switchChain({id:arkivChain.id})}catch(e){if(e.code!==4902&&e.cause?.code!==4902)throw e;await wallet.addChain({chain:rabdi({accessKey:''})});await wallet.switchChain({id:arkivChain.id});}
- if(await wallet.getChainId()!==arkivChain.id)throw Error('Switch to Rabdi.');
  const existing=await client.select({$key:true,arcTx:true}).from(Reports).where(and(eq('registry',activeRegistry().toLowerCase()),eq('arcTx',draft.arcTx))).createdBy(account).limit(1).fetch();
  if(existing.entities.length)return {entityKey:existing.entities[0].$key,txHash:null};
  return wallet.createEntity(Reports,{registry:activeRegistry().toLowerCase(),subject:draft.subject.toLowerCase(),arcTx:draft.arcTx,reportId:String(draft.reportId),hash:evidenceHash(draft.evidence),evidence:stringToBytes(draft.evidence)},{expiration:ExpirationTime.fromDays(30),flags:{readonly:true,permissionlessExtension:true}});
@@ -42,3 +38,14 @@ export async function submitArcReport(subject,evidence){
  for(const log of receipt.logs){if(log.address.toLowerCase()!==activeRegistry().toLowerCase())continue;try{const event=c.interface.parseLog(log);if(event?.name==='Submitted')return {subject,evidence,reportId:event.args.id.toString(),arcTx:receipt.hash}}catch{}}
  throw Error('No report event found. Check your wallet transaction before retrying.');
 }
+
+export const arkivPublicClient=client;
+export async function getArkivWallet(){
+ if(!window.ethereum)throw Error('Install MetaMask.');
+ const [account]=await window.ethereum.request({method:'eth_requestAccounts'});
+ const wallet=createWalletClient({chain:arkivChain,transport:custom(window.ethereum),account});
+ try{await wallet.switchChain({id:arkivChain.id})}catch(e){if(e.code!==4902&&e.cause?.code!==4902)throw e;await wallet.addChain({chain:rabdi({accessKey:''})});await wallet.switchChain({id:arkivChain.id});}
+ if(await wallet.getChainId()!==arkivChain.id)throw Error('Switch to Rabdi.');
+ return wallet;
+}
+export async function renewArkivEntity(entityKey){if(!/^0x[0-9a-f]{64}$/i.test(entityKey))throw Error("Enter a valid Arkiv entity key.");const wallet=await getArkivWallet();return wallet.extendEntity({entityKey,expiration:ExpirationTime.fromDays(30)});}

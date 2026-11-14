@@ -11,6 +11,8 @@ const SETTINGS = {
 };
 
 const targets = [
+  {name:'AegisReportStake',file:'contracts/AegisReportStake.sol',unit:'AegisReportStake.sol',out:'src/stake-artifact.json',version:'stake'},
+  {name:'MockUSDC',file:'contracts/MockUSDC.sol',unit:'MockUSDC.sol',out:'artifacts/mock-usdc.json',version:'mock'},
   { name: 'AegisRegistry', file: 'contracts/AegisRegistry.sol', unit: 'AegisRegistry.sol', out: 'src/registry-artifact.json', version: 2 },
   { name: 'AegisRegistry', file: 'contracts/legacy/AegisRegistryV1.sol', unit: 'AegisRegistry.sol', out: 'src/registry-v1-artifact.json', version: 1, frozen: true },
 ];
@@ -18,7 +20,7 @@ const targets = [
 fs.mkdirSync('artifacts', { recursive: true });
 for (const t of targets) {
   const input = { language: 'Solidity', sources: { [t.unit]: { content: fs.readFileSync(t.file, 'utf8') } }, settings: SETTINGS };
-  const output = JSON.parse(solc.compile(JSON.stringify(input)));
+  const output = JSON.parse(solc.compile(JSON.stringify(input),{import:filename=>{try{return {contents:fs.readFileSync('node_modules/'+filename,'utf8')}}catch{return {error:'Import not found: '+filename}}}}));
   const errors = (output.errors || []).filter((e) => e.severity === 'error');
   if (errors.length) throw new Error(errors.map((e) => e.formattedMessage).join('\n'));
   for (const w of output.errors || []) if (w.severity === 'warning') console.warn(w.formattedMessage);

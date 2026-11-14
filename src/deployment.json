@@ -1,14 +1,14 @@
 {
   "chainId": 5042002,
-  "version": 1,
-  "registryAddress": "0x5eD536a9a2856109E4a02016ad2a99B3865e91F0",
-  "transactionHash": "0x412009386d92830e4ecc3bf173531f8f1e8ad15b02ef0c5a84ec6259ca429047",
+  "version": 2,
+  "registryAddress": "0x0152aD9b65959069c605BE509a1fbCDc24D54924",
+  "transactionHash": "0x22fa9adfaa1582c92fc18064f9a7c9dd38da7e6d1c5fa3d557a6bfb45ebbb612",
   "deployer": "0x2Df43B66A31cd93792E4a32Af494b5a18c614148",
   "reviewer": "0xe558716de7B4af56A5cD472Ce323Ad5cb5F445Af",
-  "blockNumber": 71042365,
-  "blockHash": "0x9e2f1e68e93f13a4d2d3708c1c54db74877bb05e420130a0bfe2089406619c65",
-  "gasUsed": "566869",
-  "feeUSDC": "0.014171725",
+  "blockNumber": 71123871,
+  "blockHash": "0xde55b34e6b18320295fb7f94afa2c259e5343a85f510195ce9b68d6709ce86af",
+  "gasUsed": "1347581",
+  "feeUSDC": "0.033689525",
   "bytecodeAndConstructorVerified": true,
-  "verifiedAt": "2026-11-06T14:26:05.720Z"
+  "verifiedAt": "2026-11-07T02:09:12.007Z"
 }

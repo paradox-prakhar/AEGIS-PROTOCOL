@@ -7,12 +7,13 @@
   "proposedInitialStatus": "PENDING REVIEW (only after Arc confirmation)",
   "arc": {
     "chainId": 5042002,
-    "registry": "0x5eD536a9a2856109E4a02016ad2a99B3865e91F0",
-    "contractVersion": 1,
-    "method": "submit(address,bytes32)",
+    "registry": "0x0152aD9b65959069c605BE509a1fbCDc24D54924",
+    "contractVersion": 2,
+    "method": "submit(address,bytes32,string)",
     "args": [
       "0x1111111111111111111111111111111111111111",
-      "0xb034d7ec48a1bddf84b4c57a14f10c0966304c1f091757894a13cec984c8f3eb"
+      "0xb034d7ec48a1bddf84b4c57a14f10c0966304c1f091757894a13cec984c8f3eb",
+      ""
     ],
     "value": "0",
     "reportId": null,
@@ -32,7 +33,7 @@
     "permissionlessExtension": true,
     "transactionHash": null,
     "fields": {
-      "registry": "0x5ed536a9a2856109e4a02016ad2a99b3865e91f0",
+      "registry": "0x0152ad9b65959069c605be509a1fbcdc24d54924",
       "subject": "0x1111111111111111111111111111111111111111",
       "arcTx": "<confirmed Arc receipt hash>",
       "reportId": "<confirmed Arc report ID>",
