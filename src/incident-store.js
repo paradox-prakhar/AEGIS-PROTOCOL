@@ -1,0 +1,4 @@
+import{defineSchema,bytes}from'@arkiv-network/sdk/schema';import{stringToBytes,hexToString}from'viem';import{ExpirationTime}from'@arkiv-network/sdk';import{getArkivWallet,arkivPublicClient}from'./arkiv';
+const Incidents=defineSchema('aegis.encrypted-incidents.v1',{envelope:bytes()});
+export async function saveIncident(envelope){const wallet=await getArkivWallet();return wallet.createEntity(Incidents,{envelope:stringToBytes(JSON.stringify(envelope))},{expiration:ExpirationTime.fromDays(30),flags:{readonly:true,permissionlessExtension:true}})}
+export async function loadIncidents(){const wallet=await getArkivWallet();const page=await arkivPublicClient.select().from(Incidents).createdBy(wallet.account.address).limit(50).fetch();return page.entities.map(row=>({key:row.$key,expiry:row.$expiresAt.toString(),envelope:JSON.parse(hexToString(row.envelope.value))}))}

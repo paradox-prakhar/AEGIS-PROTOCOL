@@ -31,9 +31,35 @@ export function rememberRegistry(address) {
   try { localStorage.setItem(STORAGE_KEY, address); return true; } catch { return false; }
 }
 
+// The public Arc RPC rate-limits bursts (JSON-RPC -32005 / HTTP 429). ethers surfaces a rate-limited
+// eth_call as CALL_EXCEPTION "missing revert data", which is indistinguishable from a real revert
+// unless we inspect the raw RPC error, so detect it explicitly and retry with backoff.
+const RATE_LIMIT_CODES = new Set([-32005, 429]);
+const rateLimitedRpcError = (err) => !!err && (RATE_LIMIT_CODES.has(Number(err.code)) || /rate limit|too many requests/i.test(String(err.message || '')));
+export function isRateLimited(e) {
+  return rateLimitedRpcError(e?.info?.error) || rateLimitedRpcError(e?.error) || /429/.test(String(e?.info?.responseStatus || ''));
+}
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+class ArcReadProvider extends JsonRpcProvider {
+  async _send(payload) {
+    for (let attempt = 0; ; attempt += 1) {
+      let results;
+      let failure;
+      try { results = await super._send(payload); } catch (e) { failure = e; }
+      const limited = failure ? isRateLimited(failure) : results.some((r) => rateLimitedRpcError(r?.error));
+      if (!limited || attempt >= 5) {
+        if (failure) throw failure;
+        return results;
+      }
+      await sleep(250 * 2 ** attempt + Math.random() * 250); // reads are idempotent, so retrying the batch is safe
+    }
+  }
+}
+
 let readProvider;
 function reader() {
-  readProvider ??= new JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true, batchMaxCount: 20 });
+  readProvider ??= new ArcReadProvider(RPC, CHAIN_ID, { batchMaxCount: 20 });
   return readProvider;
 }
 
@@ -75,7 +101,13 @@ export async function registryVersion(address) {
   const provider = reader();
   if ((await provider.getCode(address)) === '0x') throw new Error('No contract is deployed at this registry address on Arc Testnet.');
   let version = 1;
-  try { version = Number(await new Contract(address, artifact.abi, provider).VERSION()); } catch { version = 1; }
+  try {
+    version = Number(await new Contract(address, artifact.abi, provider).VERSION());
+  } catch (error) {
+    // Only a genuine revert means "no VERSION() getter" (v1). Never cache a guess made from a rate-limit.
+    if (error.code !== 'CALL_EXCEPTION' || isRateLimited(error)) throw error;
+    version = 1;
+  }
   versionCache.set(key, version);
   return version;
 }
@@ -172,6 +204,7 @@ const FRIENDLY = {
 
 export function describeError(e) {
   if (e?.code === 'ACTION_REJECTED' || e?.code === 4001 || e?.info?.error?.code === 4001) return 'Request rejected in wallet.';
+  if (isRateLimited(e)) return 'The Arc RPC is busy (rate limited). Wait a few seconds and try again.';
   const data = e?.data ?? e?.info?.error?.data ?? e?.error?.data;
   let name = e?.revert?.name;
   if (!name && typeof data === 'string' && data.length >= 10) {
@@ -182,14 +215,6 @@ export function describeError(e) {
   if (e?.code === 'INSUFFICIENT_FUNDS') return 'Insufficient test USDC for gas. Use the Circle faucet.';
   if (e?.code === 'NETWORK_ERROR' || e?.code === 'TIMEOUT') return 'Arc RPC is unreachable. Try again shortly.';
   return e?.shortMessage || e?.message || 'Unexpected error.';
-}
-
-/** True when a public RPC refused the request (HTTP 429 / -32005); ethers reports this as "missing revert data". */
-export function isRateLimited(e) {
-  let text = String(e?.message || '');
-  try { text += JSON.stringify(e?.info ?? e?.error ?? null); } catch { /* circular */ }
-  text = text.toLowerCase();
-  return text.includes('rate limit') || text.includes('-32005') || text.includes('"httpstatus":429');
 }
 
 async function withRateLimitRetry(fn, attempts = 5) {
