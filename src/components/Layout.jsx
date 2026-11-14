@@ -16,7 +16,7 @@ import { Button } from './ui';
 export const NAV = [
   { group: 'Stay safe', items: [
     ['overview', 'Home', LayoutDashboard],
-    ['scanner', 'Scam checker', ScanLine],
+    ['scanner', 'Wallet checker', ScanLine],
     ['learn', 'Learn scam types', GraduationCap],
   ] },
   { group: 'Get help', items: [

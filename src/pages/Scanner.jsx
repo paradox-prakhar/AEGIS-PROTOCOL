@@ -4,9 +4,8 @@ import { ScamChecker } from '../components/checker/ScamChecker';
 import { Reveal, RevealGroup, RevealItem, SplitHeading } from '../components/motion';
 
 const LEGEND = [
-  ['safe', 'Looks safe'],
-  ['warning', 'Suspicious'],
-  ['danger', 'Likely a scam'],
+  ['warning', 'Under review / linked'],
+  ['danger', 'Spam wallet'],
   ['neutral', 'No record'],
 ];
 
@@ -15,16 +14,13 @@ export default function Scanner({ params }) {
     <div className="narrow-page">
       <RevealGroup className="page-header center-header" onMount>
         <div>
-          <SplitHeading lines={['Check it', { text: 'before you act.', className: 'grad' }]} />
-          <RevealItem as="p">Message, link, number, UPI, wallet or screenshot.</RevealItem>
+          <SplitHeading lines={['Verify a wallet', { text: 'before you send.', className: 'grad' }]} />
+          <RevealItem as="p">Verify a wallet address against the onchain report registry and its links to reported wallets.</RevealItem>
         </div>
       </RevealGroup>
 
       <Reveal className="card checker-card">
-        <ScamChecker
-          initialMode={params.address ? 'wallet' : params.mode || 'message'}
-          initialValue={params.address || ''}
-        />
+        <ScamChecker key={params.address || ''} initialValue={params.address || ''} />
       </Reveal>
 
       <Reveal delay={0.1} as="ul" className="legend-row" aria-label="What results mean">

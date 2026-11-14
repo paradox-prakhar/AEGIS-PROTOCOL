@@ -148,6 +148,37 @@ export async function lookupSubject(address, subject) {
   return { rows: rows.filter((r) => r.address.toLowerCase() === subject.toLowerCase()), complete: false, version };
 }
 
+/**
+ * Every report filed by `reporter`, newest first. The registry has no reporter index,
+ * so reports are paged newest-first (up to `max`) and filtered locally.
+ */
+export async function fetchReportsBy(address, reporter, { max = 2000 } = {}) {
+  if (!isAddress(reporter)) return { rows: [], complete: true };
+  const who = reporter.toLowerCase();
+  const mine = [];
+  let before;
+  let scanned = 0;
+  for (;;) {
+    const page = await fetchReports(address, { before, limit: 100 });
+    mine.push(...page.rows.filter((r) => r.reporter.toLowerCase() === who));
+    scanned += page.rows.length;
+    if (page.nextBefore === null) return { rows: mine, complete: true };
+    if (scanned >= max) return { rows: mine, complete: false };
+    before = page.nextBefore;
+  }
+}
+
+/** The report id emitted by a confirmed `submit` transaction, or null. */
+export function reportIdFromReceipt(receipt) {
+  for (const log of receipt?.logs || []) {
+    try {
+      const parsed = errorInterface.parseLog(log);
+      if (parsed?.name === 'Submitted') return Number(parsed.args.id);
+    } catch { /* not a registry event */ }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Writes
 // ---------------------------------------------------------------------------

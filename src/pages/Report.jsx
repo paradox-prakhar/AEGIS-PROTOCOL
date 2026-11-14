@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
-import { Download, FileWarning, Fingerprint, PenLine, Wallet } from 'lucide-react';
-import { evidenceHash } from '../chain';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, Download, FileWarning, Fingerprint, PenLine, RefreshCw, Wallet } from 'lucide-react';
+import { evidenceHash, explorerTx, fetchReportsBy, friendlyError, reportIdFromReceipt } from '../chain';
 import { useWallet } from '../state/wallet';
 import { useRegistry } from '../state/registry';
 import { useTx } from '../state/useTx';
 import { useToast } from '../state/toast';
 import { useLocalList } from '../state/useLocalList';
-import { Address, Button, Callout, Card, EmptyState, Field, PageHeader, TxStatus } from '../components/ui';
+import { Address, Button, Callout, Card, EmptyState, Field, PageHeader, StatusBadge, TxStatus } from '../components/ui';
 import { downloadJson, isEvmAddress, isTxHash } from '../lib/format';
 
 const CATEGORIES = ['Approval phishing', 'Address poisoning', 'Rug pull', 'Impersonation', 'Drainer contract', 'Other suspicious activity'];
@@ -22,6 +22,22 @@ export default function Report({ params = {} }) {
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString());
   const [backedUp, setBackedUp] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [lastReport, setLastReport] = useState(null);
+  const [mine, setMine] = useState({ rows: [], loading: false, error: '', complete: true });
+
+  // Reports filed by the connected wallet, with their live onchain status.
+  const loadMine = useCallback(async () => {
+    if (!wallet.account || !reg.address) { setMine({ rows: [], loading: false, error: '', complete: true }); return; }
+    setMine((m) => ({ ...m, loading: true, error: '' }));
+    try {
+      const { rows, complete } = await fetchReportsBy(reg.address, wallet.account);
+      setMine({ rows, loading: false, error: '', complete });
+    } catch (e) {
+      setMine((m) => ({ ...m, loading: false, error: friendlyError(e) }));
+    }
+  }, [wallet.account, reg.address]);
+  useEffect(() => { loadMine(); }, [loadMine]);
+  const pkgByHash = useMemo(() => new Map(saved.map((s) => [s.hash.toLowerCase(), s])), [saved]);
 
   const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e.target.value })); setBackedUp(false); };
   const txList = form.txs.split(/[\s,]+/).filter(Boolean);
@@ -58,8 +74,12 @@ export default function Report({ params = {} }) {
     if (!valid || !backedUp) return;
     const receipt = await tx.run(reg.address, 'submit', [form.subject, hash, '']);
     if (receipt) {
-      setSaved([{ hash, text: pkgText, subject: form.subject, category: form.category, tx: receipt.hash, at: createdAt }, ...saved]);
+      const id = reportIdFromReceipt(receipt);
+      const entry = { id, hash, text: pkgText, subject: form.subject, category: form.category, description: form.description, tx: receipt.hash, at: createdAt };
+      setSaved([entry, ...saved]);
+      setLastReport(entry);
       toast('Report confirmed on Arc Testnet.', 'success');
+      loadMine();
       setForm(blank);
       setCreatedAt(new Date().toISOString());
       setBackedUp(false);
@@ -126,25 +146,50 @@ export default function Report({ params = {} }) {
           <Callout tone="warning" title="Before you publish">
             Never include private keys, seed phrases, or personal information about victims. Allegations are public and can be challenged by anyone.
           </Callout>
-          <Card title="Your submitted packages" subtitle="Stored in this browser only" pad={false}>
-            {saved.length ? (
+          {lastReport && (
+            <Card title="Report submitted" subtitle="Your report is now public onchain and pending review.">
+              <div className="stack">
+                <p><CheckCircle2 size={16} /> <b>{lastReport.id !== null ? `Report #${lastReport.id}` : 'Report'}</b> · {lastReport.category}</p>
+                <Address value={lastReport.subject} link={false} />
+                <p className="muted small" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{lastReport.description}</p>
+                <small className="muted">Evidence hash <code>{lastReport.hash.slice(0, 18)}…</code></small>
+                <div className="row">
+                  {lastReport.id !== null && <a className="btn btn-secondary btn-sm" href={`#/registry?id=${lastReport.id}`}>View in registry</a>}
+                  <a className="link-btn" href={explorerTx(lastReport.tx)} target="_blank" rel="noreferrer">Transaction ↗</a>
+                </div>
+                <small className="muted">Wallets that transacted with this address will be flagged as linked when they are checked.</small>
+              </div>
+            </Card>
+          )}
+          <Card title="My reports" subtitle={wallet.isConnected ? 'Reports filed by your connected wallet, with live status' : 'Connect your wallet to see your reports'} pad={false}
+            action={wallet.isConnected && <Button variant="ghost" size="sm" icon={RefreshCw} loading={mine.loading} onClick={loadMine}>Refresh</Button>}>
+            {mine.error && <p className="field-msg error" role="alert" style={{ padding: '0 16px' }}>{mine.error}</p>}
+            {mine.rows.length ? (
               <ul className="list">
-                {saved.map((s) => (
-                  <li key={s.hash}>
-                    <div>
-                      <b>{s.category}</b>
-                      <Address value={s.subject} link={false} />
-                      <small className="muted"><code>{s.hash.slice(0, 14)}…</code></small>
-                    </div>
-                    <div className="row">
-                      <Button variant="ghost" size="sm" icon={Download} onClick={() => downloadJson(`aegis-evidence-${s.hash.slice(2, 12)}.json`, s.text)}>File</Button>
-                    </div>
-                  </li>
-                ))}
+                {mine.rows.map((r) => {
+                  const pkg = pkgByHash.get(r.evidenceHash.toLowerCase());
+                  return (
+                    <li key={r.id}>
+                      <div>
+                        <b><a href={`#/registry?id=${r.id}`}>Report #{r.id}</a>{pkg ? ` · ${pkg.category}` : ''}</b>
+                        <Address value={r.address} link={false} />
+                        {pkg?.description && <small className="muted" style={{ overflowWrap: 'anywhere' }}>{pkg.description.length > 140 ? `${pkg.description.slice(0, 140)}…` : pkg.description}</small>}
+                        <small className="muted">{new Date(r.createdAt * 1000).toLocaleString()} · <code>{r.evidenceHash.slice(0, 14)}…</code></small>
+                      </div>
+                      <div className="row">
+                        <StatusBadge status={r.status} />
+                        {pkg && <Button variant="ghost" size="sm" icon={Download} onClick={() => downloadJson(`aegis-evidence-${pkg.hash.slice(2, 12)}.json`, pkg.text)}>File</Button>}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
-              <EmptyState icon={FileWarning} title="Nothing submitted yet">Confirmed submissions and their evidence files appear here.</EmptyState>
+              <EmptyState icon={FileWarning} title={mine.loading ? 'Loading your reports…' : 'No reports yet'}>
+                {wallet.isConnected ? 'Reports you submit from this wallet appear here with their review status.' : 'Connect the wallet you reported from.'}
+              </EmptyState>
             )}
+            {!mine.complete && <p className="muted small" style={{ padding: '0 16px 12px' }}>Showing reports from the latest 2000 registry records.</p>}
           </Card>
         </div>
       </div>

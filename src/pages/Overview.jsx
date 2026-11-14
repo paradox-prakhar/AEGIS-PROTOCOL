@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight, Ban, EyeOff, HeartHandshake, Image as ImageIcon, IndianRupee, Link2, ListChecks, MessageSquareText,
-  Phone, ScanLine, ShieldAlert, ShieldCheck, Wallet,
+  ArrowRight, Ban, EyeOff, HeartHandshake, Link2, ListChecks, ScanLine, ShieldAlert, ShieldCheck, Wallet,
 } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useRegistry } from '../state/registry';
@@ -21,20 +20,17 @@ const ParticleShield = lazy(() => import('../components/vengeance/interactive-pa
   },
 })));
 
-const DEMO_TEXT = 'Your KYC expires today. Update now: sbi-kyc.xyz';
+const DEMO_TEXT = '0x1111111111111111111111111111111111111111';
 
 const ORBITS = [
   { id: 'inner', radius: 'var(--radius-inner)', speed: 22, items: [
-    { id: 'msg', label: 'Messages', icon: <MessageSquareText size={16} /> },
-    { id: 'link', label: 'Links', icon: <Link2 size={16} /> },
+    { id: 'wallet', label: 'Wallets', icon: <Wallet size={16} /> },
   ] },
   { id: 'mid', radius: 'var(--radius-mid)', speed: 34, items: [
-    { id: 'phone', label: 'Phone numbers', icon: <Phone size={16} /> },
-    { id: 'upi', label: 'UPI IDs', icon: <IndianRupee size={16} /> },
+    { id: 'reports', label: 'Onchain reports', icon: <ShieldAlert size={16} /> },
   ] },
   { id: 'outer', radius: 'var(--radius-outer)', speed: 50, items: [
-    { id: 'shot', label: 'Screenshots', icon: <ImageIcon size={16} /> },
-    { id: 'wallet', label: 'Wallets', icon: <Wallet size={16} /> },
+    { id: 'links', label: 'Linked wallets', icon: <Link2 size={16} /> },
   ] },
 ];
 
@@ -47,7 +43,7 @@ const STEPS = [
 const PROMISES = [
   [Ban, 'Never asks for your OTP or PIN'],
   [Ban, 'Never charges to “recover” money'],
-  [EyeOff, 'Nothing you check is uploaded'],
+  [EyeOff, 'Never asks for your seed phrase'],
 ];
 
 function useWebGL() {
@@ -77,7 +73,7 @@ export default function Overview() {
         </div>
         <RevealGroup className="lx-hero-copy" onMount gap={0.1} delay={0.05}>
           <RevealItem><span className="lx-pill"><ShieldCheck size={14} />Free · Private · On your device</span></RevealItem>
-          <SplitHeading lines={['Is it a scam?', { text: 'Check before you pay.', className: 'grad' }]} delay={0.1} />
+          <SplitHeading lines={['Is this wallet a scam?', { text: 'Check before you send.', className: 'grad' }]} delay={0.1} />
           <RevealItem className="lx-actions">
             <Button size="lg" icon={ScanLine} onClick={() => navigate('scanner')}>Check now</Button>
             <a className="btn btn-secondary btn-lg" href="#/recovery"><HeartHandshake size={17} />I’ve been scammed</a>
@@ -93,11 +89,11 @@ export default function Overview() {
       {/* Paste → verdict demo */}
       <section className="lx-demo" aria-labelledby="demo-title">
         <Reveal className="lx-head">
-          <h2 id="demo-title">Paste it. We check it.</h2>
+          <h2 id="demo-title">Paste a wallet. We check it.</h2>
         </Reveal>
         <div className="lx-demo-grid">
           <Reveal className="lx-demo-kb">
-            <p className="sr-only">Example message: {DEMO_TEXT}</p>
+            <p className="sr-only">Example wallet address: {DEMO_TEXT}</p>
             <TypingKeyboard autoTypeText={DEMO_TEXT} onCycle={(s) => setTyped(s === 'typed')} />
           </Reveal>
           <div className="lx-demo-result" aria-live="polite">
@@ -106,10 +102,10 @@ export default function Overview() {
                 <motion.div key="v" className="lx-verdict" initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ type: 'spring', stiffness: 260, damping: 24 }}>
                   <span className="lx-verdict-icon"><ShieldAlert size={22} /></span>
                   <div>
-                    <b>Likely a scam</b>
+                    <b>Spam wallet</b>
                     <ul>
-                      <li>Fake bank link</li>
-                      <li>Urgent deadline</li>
+                      <li>Confirmed onchain report</li>
+                      <li>Connected wallets flagged</li>
                     </ul>
                   </div>
                 </motion.div>
@@ -127,13 +123,13 @@ export default function Overview() {
       {/* Everything it checks */}
       <section className="lx-orbit" aria-labelledby="orbit-title">
         <Reveal className="lx-head">
-          <h2 id="orbit-title">One checker for everything.</h2>
+          <h2 id="orbit-title">Wallet verification, end to end.</h2>
         </Reveal>
         <SolarSystem
           center={<ShieldCheck size={30} />}
           orbits={ORBITS}
           isPaused={Boolean(reduce)}
-          label="Aegis checks messages, links, phone numbers, UPI IDs, screenshots and wallet addresses."
+          label="Aegis verifies wallet addresses against onchain reports and their links to reported wallets."
         />
       </section>
 

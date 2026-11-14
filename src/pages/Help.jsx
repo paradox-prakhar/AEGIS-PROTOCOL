@@ -65,7 +65,7 @@ export default function Help() {
 
       <Reveal calm className="help-links">
         <a className="help-band" href="#/recovery"><Phone size={20} /><span><b>Need to act now?</b><small>Follow the emergency checklist</small></span></a>
-        <a className="help-band help-band-accent" href="#/scanner"><ShieldCheck size={20} /><span><b>Got a suspicious number?</b><small>Check it in the Scam checker</small></span></a>
+        <a className="help-band help-band-accent" href="#/scanner"><ShieldCheck size={20} /><span><b>Got a suspicious wallet address?</b><small>Verify it in the wallet checker</small></span></a>
       </Reveal>
     </div>
   );

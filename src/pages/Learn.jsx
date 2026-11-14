@@ -107,7 +107,7 @@ const TYPES = [
         <ul>{t.act.map((s) => <li key={s}>{s}</li>)}</ul>
       </div>
       <div className="learn-actions">
-        <a className="btn btn-primary btn-sm" href="#/scanner">Check a message <ArrowRight size={14} /></a>
+        <a className="btn btn-primary btn-sm" href="#/scanner">Check a wallet <ArrowRight size={14} /></a>
         <a className="btn btn-calm btn-sm" href="#/recovery">I’ve been affected</a>
       </div>
     </div>

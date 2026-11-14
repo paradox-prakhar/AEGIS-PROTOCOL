@@ -8,18 +8,18 @@ import { stagger } from '../../motion/config';
 const META = {
   safe: {
     label: 'Looks safe', icon: ShieldCheck, colors: ['#34d399', '#2de2e6', '#34d399'],
-    summary: 'None of the common scam warning signs were found.',
-    next: ['Still take a moment: did you expect this message, link or contact?', 'If anyone asks for money, an OTP or a PIN later, stop and check again.'],
+    summary: 'No reports or links to reported wallets were found.',
+    next: ['Still verify the address through another channel before sending funds.', 'Send a small test amount first.'],
   },
   suspicious: {
     label: 'Suspicious', icon: AlertTriangle, colors: ['#fbbf24', '#f59e0b', '#fbbf24'],
-    summary: 'Some warning signs were found. Slow down before you act.',
-    next: ['Don’t click links, call back or pay from this message.', 'Contact the company or person through their official website or app.', 'Ask someone you trust to take a look.'],
+    summary: 'This wallet has open reports, or has transacted with a reported wallet. Slow down.',
+    next: ['Don’t send funds or approve tokens for this address yet.', 'Confirm the address with the recipient through another channel.', 'Watch the registry: the report may be confirmed or rejected soon.'],
   },
   dangerous: {
-    label: 'Likely a scam', icon: ShieldAlert, colors: ['#f87171', '#fb7185', '#f87171'],
-    summary: 'This matches patterns used in real scams. Please don’t respond, click or pay.',
-    next: ['Do not share any OTP, PIN, password or card details.', 'Block and report the sender in your messaging app.', 'Already paid or shared details? Get step-by-step help now — acting quickly helps.'],
+    label: 'Spam wallet', icon: ShieldAlert, colors: ['#f87171', '#fb7185', '#f87171'],
+    summary: 'This wallet is a confirmed spam wallet or is linked to one. Do not send funds.',
+    next: ['Do not send funds, sign messages or approve tokens for this address.', 'Revoke any token approvals you gave it.', 'Already sent funds? Get step-by-step help now — acting quickly helps.'],
   },
   unknown: {
     label: 'No record found', icon: ShieldQuestion, colors: ['#8592a4', '#2de2e6', '#8592a4'],
@@ -45,7 +45,7 @@ export function Verdict({ result }) {
           </motion.span>
           <div>
             <p className="verdict-kicker">Result{result.demo && <span className="tag">DEMO FIXTURE</span>}</p>
-            <h2 className="verdict-label">{result.label && result.verdict === 'unknown' ? result.label : m.label}</h2>
+            <h2 className="verdict-label">{result.label || m.label}</h2>
             <p className="verdict-summary">{m.summary}</p>
           </div>
         </header>
@@ -78,11 +78,30 @@ export function Verdict({ result }) {
           </div>
         )}
 
-        {result.extracted && (
-          <details className="verdict-extracted">
-            <summary>Text we read from the screenshot</summary>
-            <p>{result.extracted}</p>
-          </details>
+        {result.links?.length > 0 && (
+          <div className="verdict-matches">
+            <p className="muted small">Linked reported wallets — this address transacted with them</p>
+            {result.links.map((l) => (
+              <a key={l.address} className="match" href={`#/scanner?address=${l.address}`}>
+                <Address value={l.address} link={false} />
+                <StatusBadge status={l.status === 'Confirmed' ? 'Confirmed' : 'Pending'} />
+                <span className="muted">{l.txs.length} tx</span>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {result.connected?.length > 0 && (
+          <div className="verdict-matches">
+            <p className="muted small">Connected wallets flagged as spam by association ({result.connected.length})</p>
+            {result.connected.slice(0, 20).map((c) => (
+              <a key={c.address} className="match" href={`#/scanner?address=${c.address}`}>
+                <Address value={c.address} link={false} />
+                <span className="muted">{c.txs.length} tx with this wallet</span>
+              </a>
+            ))}
+            {result.connected.length > 20 && <p className="muted small">…and {result.connected.length - 20} more.</p>}
+          </div>
         )}
 
         <div className="verdict-next">
@@ -92,17 +111,15 @@ export function Verdict({ result }) {
 
         <div className="verdict-actions">
           {result.verdict === 'dangerous' && (
-            <a className="btn btn-calm" href="#/recovery"><HeartHandshake size={16} />I already responded or paid</a>
+            <a className="btn btn-calm" href="#/recovery"><HeartHandshake size={16} />I already sent funds</a>
           )}
           {result.mode === 'wallet' && (
             <a className="btn btn-secondary" href={`#/report?address=${result.input}`}><FileWarning size={16} />Report this address</a>
           )}
-          <a className="link-btn" href="#/learn">Learn how this scam works <ArrowRight size={14} /></a>
+          <a className="link-btn" href="#/registry">View the registry <ArrowRight size={14} /></a>
         </div>
         <p className="verdict-disclaimer">
-          {result.mode === 'wallet'
-            ? 'Registry results are community allegations reviewed onchain — a strong signal, not a guarantee.'
-            : 'These are transparent pattern checks run on your device, not a guarantee. When in doubt, don’t pay.'}
+          Registry results are community allegations reviewed onchain, and link flags come from the wallet’s recent transactions — a strong signal, not a guarantee.
         </p>
       </div>
     </GlowBorderCard>
